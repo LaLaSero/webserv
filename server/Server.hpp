@@ -17,9 +17,17 @@
 #define BUFFER_SIZE 1024
 #endif
 
+#ifndef AF_INET
 #define AF_INET 2
+#endif
+
+#ifndef SOCK_STREAM
 #define SOCK_STREAM 1
+#endif
+
+#ifndef INADDR_ANY
 #define INADDR_ANY 0
+#endif
 
 // let me suppose _server_map to be like this:
 // _servers = {
@@ -38,20 +46,16 @@ struct ServerConfig
 	int max_body_size;
 
 	ServerConfig(std::string server_name, std::string root, int max_body_size)
-	{
-		this->server_name = server_name;
-		this->root = root;
-		this->max_body_size = max_body_size;
-	}
+		: server_name(server_name), root(root), max_body_size(max_body_size)
+	{}
 };
-
 class Server
 {
 	private:
-		struct	addrinfo _hints;
-		struct	addrinfo *_res;
-		char	_buffer[BUFFER_SIZE];
-		int		_server_fd;
+		// struct	addrinfo _hints;
+		// struct	addrinfo *_res;
+		// char	_buffer[BUFFER_SIZE];
+		// int		_server_fd;
 		std::map<int, std::vector<ServerConfig> > _server_map;
 		void loop();
 
