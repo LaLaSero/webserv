@@ -12,6 +12,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
+#include <cstdlib>
 
 #ifndef BUFFER_SIZE
 #define BUFFER_SIZE 1024
@@ -52,12 +53,22 @@ struct ServerConfig
 class Server
 {
 	private:
-		// struct	addrinfo _hints;
-		// struct	addrinfo *_res;
-		// char	_buffer[BUFFER_SIZE];
+		struct	addrinfo _hints;
+		struct	addrinfo *_res;
+		char	_buffer[BUFFER_SIZE];
 		// int		_server_fd;
 		std::map<int, std::vector<ServerConfig> > _server_map;
+		std::map<std::string, int> _fd_map;
+
+		void alocateServerAddr(std::string port);
+		void createSocket(std::string port);
+		void bindSocket(int fd);
+		void listenSocket(int fd);
+		int solve_fd(std::string port);
 		void loop();
+		void makePortFdMap(std::string port, int fd);
+		void closeUsedFd();
+	
 
 
 	public:
