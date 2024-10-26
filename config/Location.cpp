@@ -6,7 +6,7 @@
 /*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/25 20:10:34 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/26 15:46:21 by yanagitaryu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 Location::Location() :  directory_listing_(false), client_max_body_size_(0) {}
 
-// Getter
 std::string Location::getPath() const {
     return path_;
 }

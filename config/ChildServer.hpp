@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
+/*   ChildServer.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:14:58 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/24 20:37:56 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/26 16:13:44 by yanagitaryu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 
 #define DEFAULT_RBSIZE 1048576
 
-class Server
+class ChildServer
 {
 	private:
 		std::string listen_ip_;
@@ -43,4 +43,5 @@ class Server
 		void add_error_page_(const int i, const std::string& page);
 		void set_request_max(const size_t i);
 		bool server_names_empty() const;
+		void add_location(const Location &loc);
 };

@@ -6,7 +6,7 @@
 /*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/24 16:51:18 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/25 20:22:50 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/26 15:46:13 by yanagitaryu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,6 @@
 class Location 
 {
 public:
-    // コンストラクタ
     Location();
 
     // Getter

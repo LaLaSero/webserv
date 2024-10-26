@@ -6,16 +6,36 @@
 /*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/25 20:45:47 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/26 17:02:38 by yanagitaryu      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include"Parser.hpp"
-#include"Server.hpp"
+#include"ChildServer.hpp"
 
 Parser::Parser()
 {
 }
+
+Parser::~Parser()
+{
+}
+
+Parser::Parser(const Parser &other)
+{
+	*this = other;
+}
+
+Parser& Parser::operator=(const Parser& other)
+    {
+        if (this != &other)
+        {
+            content_.str(other.content_.str());
+            content_.clear();
+        }
+        return (*this);
+    }
+
 
 void Parser::LoadFile(const std::string& file_path)
 {
@@ -76,7 +96,7 @@ void Parser::ValidPort(std::string &port)
         throw std::out_of_range("Port is invalid: must be between 0 and 65535.");
 }
 
-void Parser::ParseListen(Server &serv, std::string &line)
+void Parser::ParseListen(ChildServer &serv, std::string &line)
 {
 	std::string ip;
 	std::string port;
@@ -103,7 +123,7 @@ void Parser::ParseListen(Server &serv, std::string &line)
 	serv.set_listen_port_(port);
 }
 
-void Parser::ValidServerName(const std::string& str) {
+void Parser::ValidChildServerName(const std::string& str) {
     if (str.empty()) 
 	    throw std::runtime_error("error empty:" + str);
 
@@ -119,7 +139,7 @@ void Parser::ValidServerName(const std::string& str) {
     }
 }
 
-void Parser::ParseServname(Server &serv, std::string &line)
+void Parser::ParseServname(ChildServer &serv, std::string &line)
 {
 	std::string body;
 	std::string name;
@@ -129,12 +149,12 @@ void Parser::ParseServname(Server &serv, std::string &line)
 	while(body.find(' ') != std::string::npos)
 	{
 		name = body.substr(0, body.find(' '));
-		ValidServerName(name);
+		ValidChildServerName(name);
 		serv.add_server_names_(name);
 		body = body.substr(body.find(' ') + 1, body.size());
 	}
 	name = body.substr(0,body.size() - 1);
-	ValidServerName(name);
+	ValidChildServerName(name);
 	serv.add_server_names_(name);
 }
 
@@ -147,7 +167,7 @@ void Parser::ValidErrorstatus(std::string &status)
 }
 
 
-void Parser::ParseErrorpage(Server &serv, std::string &line)
+void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 {
 
 	std::vector<int> status_vec;
@@ -155,8 +175,6 @@ void Parser::ParseErrorpage(Server &serv, std::string &line)
 	std::string body;
 	std::string status;
 	body = line.substr(line.find(' ')+ 1);
-	if (body.find(';') != body.size() - 1)
-		throw std::runtime_error("ParseErrorpage: not found ';'");
 	while(body.find(' ') != std::string::npos)
 	{
 		status = body.substr(0, body.find(' '));
@@ -201,10 +219,8 @@ size_t Parser::max_stos(std::string &limit)
 	return (count);
 }
 
-void Parser::ParseCLMAX(Server &serv, std::string &line)
+void Parser::ParseCLMAX(ChildServer &serv, std::string &line)
 {
-	if (line[line.size() - 1] != ';')
-		throw std::runtime_error("ParseCLMAX: not found ';'");
 	std::string limit;
 	limit = line.substr(line.find(' ')+ 1);
 	limit.pop_back();
@@ -217,9 +233,6 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 	std::string late;
 
 	line = line.substr(line.find(' ')+ 1);
-	std::cout << line << std::endl;
-	if (line.find(' ') == std::string::npos)
-		throw std::runtime_error("ParserRewrite Error: '  ' is not found" + line);
 	original = line.substr(0, line.find(' '));
 	late = line.substr(line.find(' ') + 1);
 	late.pop_back();
@@ -228,7 +241,7 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 }
 
 
-void Parser::ParseLocation(Server &server, std::string &line)
+void Parser::ParseLocation(ChildServer &server, std::string &line)
 {
 	Location loc;
 
@@ -242,16 +255,14 @@ void Parser::ParseLocation(Server &server, std::string &line)
 		throw std::runtime_error("ParseLocation Error:'{' is not found" + red);
 	while (std::getline(content_, red) && red !=  "}")
 	{
-		if (red[red.size() - 1] !=';')
-			throw std::runtime_error("ParseLocation Error:';' is not found " + red);
 		std::string tmp;
-		if (red.size() > 6 && red.substr(0,5) == "root ")
+		if (check_syntax(red, "root ",true))
 		{
 			tmp = red.substr(red.find(' ') + 1);
 			tmp.erase(tmp.size() - 1);
 			loc.setRootDirectory(tmp);
 		}
-		else if (red.size() > 11 && red.substr(0,10) == "ok_method ")
+		else if (check_syntax(red, "ok_method ",true))
 		{
 			tmp = red.substr(red.find(' ') + 1);
 			tmp.erase(tmp.size() - 1);
@@ -261,20 +272,21 @@ void Parser::ParseLocation(Server &server, std::string &line)
 			loc.setDirectoryListing(true);
 		else if (red == "autoindex off;")
 			loc.setDirectoryListing(false);
-		else if (red.size() > std::strlen("rewrite ") && red.substr(0,std::strlen("rewrite ")) == "rewrite ")
+		else if (check_syntax(red, "rewrite ",true))
 			ParseRewrite(loc, red);	
-		else if (red.size() > std::strlen("index ") && red.substr(0,std::strlen("index ")) == "index ")
+		else if (check_syntax(red, "index ",true))
 		{
+			tmp = red.substr(red.find(' ') + 1);
 			tmp.erase(tmp.size() - 1);
 			loc.setDefaultFile(tmp);
 		}
-		else if  (red.size() > std::strlen("upload_directory ") && red.substr(0,std::strlen("upload_directory ")) == "upload_directory ")
+		else if ( check_syntax(red, "upload_directory ",true))
 		{
 			tmp = red.substr(red.find(' ') + 1);
 			tmp.erase(tmp.size() - 1);
 			loc.setUploadDirectory(tmp);
 		}
-		else if (red.size() > std::strlen("client_max ") && red.substr(0,std::strlen("client_max ")) == "client_max ")
+		else if ( check_syntax(red, "client_max ",true))
 		{
 			tmp = red.substr(red.find(' ') + 1);
 			tmp.erase(tmp.size() - 1);
@@ -285,35 +297,37 @@ void Parser::ParseLocation(Server &server, std::string &line)
 			ss >> i;
 			loc.setClientMaxBodySize(i);
 		}
-		else if ()
+		// we have to add cgi infomation;
+		// else if ()
 		else
 			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
+	server.add_location(loc);
 }
 
-void Parser::MakeServer(Config &conf)
+void Parser::MakeChildServer(Config &conf)
 {
-	Server serv;
+	ChildServer serv;
 	std::string line;
 
 	if (!(std::getline(content_, line) && line =="{"))
 		throw std::exception();
 	while(std::getline(content_, line) && line !=  "}")
 	{
-		if (line.size() >= 8 && line.substr(0, 7) == "listen ")
+		if (check_syntax(line, "listen ",true))
 			ParseListen(serv, line);
-		else if (line.size() >= 13 && line.substr(0, 12) == "server_name ")
+		else if (check_syntax(line, "server_name ", true))
 			ParseServname(serv, line);
-		else if (line.size() >= 12 && line.substr(0, 11) == "error_page ")
+		else if (check_syntax(line, "error_page ", true))
 			ParseErrorpage(serv, line);
-		else if (line.size() >= 22 && line.substr(0, 21) == "client_max_body_size ")
+		else if (check_syntax(line, "client_max_body_size ", true))
 			ParseCLMAX(serv, line);
-		else if (line.size() >= 10 && line.substr(0, 9) == "location ")
+		else if (check_syntax(line, "location ", false))
 			ParseLocation(serv, line);	
 		else
-			throw std::runtime_error("found error in server: " + line);
+			throw std::runtime_error("found error in server: '" + line + "'");
 	}
 	if (line != "}")
 		throw std::exception();
@@ -327,11 +341,29 @@ Config Parser::MakeConfig()
 	while (std::getline(content_, line)) 
 	{
 		if (line == "server")
-			MakeServer(conf);
+			MakeChildServer(conf);
 		else
 			throw std::runtime_error("Error found: " + line +"!");
 	}
 	return (conf);
+}
+
+bool Parser::check_syntax(std::string &line, std::string target,bool flag)
+{
+	if (line.size() > target.size() + 1 && line.substr(0, target.size()) == target)
+	{
+		if (flag)
+		{
+		 if(line[line.size() - 1] == ';')
+			return (true);
+		 else
+		 	return (false);
+		}
+		else
+			return (true);
+	}
+	else
+		return (false);
 }
 
 
