@@ -17,6 +17,7 @@
 #include <ctime>
 #include <map>
 #include <vector>
+#include <sys/time.h>
 
 enum EFdeEvent {
   kFdeRead = 0x0001,
@@ -44,6 +45,14 @@ struct FdEvent {
   void *data;
 };
 
+struct FdandEvent {
+  FdEvent *fde;
+
+  unsigned int events;
+};
+
+
+
 class EpollAdm
 {
 	public:
@@ -51,8 +60,9 @@ class EpollAdm
     void register_event(FdEvent *fde);
     void Set(FdEvent *fde, unsigned int events);
     void Add(FdEvent *fde, unsigned int events);
+    std::vector<FdandEvent> RetrieveTimeouts();
+    std::vector<FdandEvent> WaitEvents(int timeout_ms);
 	private:
     const int epfd_;
     std::map<int, FdEvent *> registered_fd_events_;
-		
 };

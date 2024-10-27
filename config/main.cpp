@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 19:40:57 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/10/27 20:53:48 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -153,6 +153,24 @@ void set_up_server(EpollAdm &epoll, Config &conf)
     }
 }
 
+void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) {
+  fde->func(fde, events, fde->data, epoll);
+}
+
+void Loop(EpollAdm &epoll) {
+  // イベントループ
+  while (1) {
+    std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
+    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin();
+         it != timeouts.end(); ++it) {
+      FdEvent *fde = it->fde;
+      unsigned int events = it->events;
+      InvokeFdEvent(fde, events, &epoll);
+    }
+
+    std::vector<FdandEvent> result = epoll.WaitEvents(100);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -172,6 +190,7 @@ int main(int argc, char *argv[])
 
 		EpollAdm epo;
 		set_up_server(epo, conf);
+    Loop(epo);
 	}
 	catch(const std::exception& e)
 	{
