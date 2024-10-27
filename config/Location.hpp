@@ -15,6 +15,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstring>
+#include <unistd.h>
+#include <algorithm>
+
 
 class Location 
 {

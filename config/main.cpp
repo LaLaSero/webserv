@@ -6,20 +6,24 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 11:16:29 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/10/27 19:40:57 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include<iostream>
 #include"Config.hpp"
 #include"Parser.hpp"
-#include"../server/Epoll.hpp"
+#include"../server/EpollAdm.hpp"
 #include"../server/SocketAddress.hpp"
-#define DEFAULT_PATH "./Makefile"
+#include"../server/ListenSocket.hpp"
+#include"../server/ConnSocket.hpp"
 
-static int InetPassiveSocket(const char *host, const char *service, int type,
+#define DEFAULT_PATH "test.conf"
+
+int InetPassiveSocket(const char *host, const char *service, int type,
                              SocketAddress *sockaddr, bool doListen,
-                             int backlog) {
+                             int backlog) 
+{
   struct addrinfo hints;
   struct addrinfo *result, *rp;
   int sfd, optval, s;
@@ -74,20 +78,44 @@ static int InetPassiveSocket(const char *host, const char *service, int type,
 	sockaddr->set_length(rp->ai_addrlen);
   }
   freeaddrinfo(result);
-  return (rp == NULL) ? -1 : sfd;
+  if (rp == NULL)
+    return (-1);
+  else
+    return (sfd);
 }
 
 
 int InetListen(const std::string &host, const std::string &service, int backlog, SocketAddress *sockaddr) 
 {
-	const char *host_cstr = host.empty() ? NULL : host.c_str();
+	const char *host_cstr;
+  if (host.empty())
+    host_cstr = NULL;
+  else
+    host_cstr = host.c_str();
   int fd = InetPassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr, true, backlog);
 	if (fd < 0) 
     	throw std::runtime_error("InetListen Error");
 	return fd;
 }
 
-void set_up_server(Epoll &epoll, Config &conf)
+
+FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
+  FdEvent *fde = new FdEvent();
+  fde->fd = fd;
+  fde->func = func;
+  fde->timeout_ms = 0;
+  fde->data = data;
+  fde->state = 0;
+  return fde;
+}
+
+void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
+{
+
+}
+
+
+void set_up_server(EpollAdm &epoll, Config &conf)
 {
     // 使用済みのIP:ポートのリストを保持
     std::vector<std::string> used_ip_ports;
@@ -114,14 +142,14 @@ void set_up_server(Epoll &epoll, Config &conf)
 
         opened_fd.push_back(fd);  // 使われたFDをリストに追加
 
-        // // ソケットを`Epoll`に登録
-        // ListenSocket *listen_sock = new ListenSocket(fd, socket_address, conf);
-        // FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
-        // epoll.Register(fde);
-        // epoll.Add(fde, kFdeRead);  // 読み込みイベントを監視対象にする
+        // // // ソケットを`EpollAdm`に登録
+        ListenSocket *listen_sock = new ListenSocket(fd, socket_address, conf);
+        FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
+        epoll.register_event(fde);
+        epoll.Add(fde, kFdeRead);  // 読み込みイベントを監視対象にする
 
-        // // 使用済みのIPとポートの組み合わせを記録
-        // used_ip_ports.push_back(ip_port);
+        // // // 使用済みのIPとポートの組み合わせを記録
+        used_ip_ports.push_back(ip_port);
     }
 }
 
@@ -142,7 +170,7 @@ int main(int argc, char *argv[])
 		pas.LoadFile(config_file_path);
 		Config conf = pas.MakeConfig();
 
-		Epoll epo;
+		EpollAdm epo;
 		set_up_server(epo, conf);
 	}
 	catch(const std::exception& e)

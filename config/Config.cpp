@@ -6,12 +6,11 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:20:04 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:57 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/10/27 15:34:17 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include"Config.hpp"
-#include "Config.hpp"
 
 // デフォルトコンストラクタ
 Config::Config()
