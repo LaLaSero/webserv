@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Location.hpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/24 16:51:18 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/26 15:46:13 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/27 10:11:50 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

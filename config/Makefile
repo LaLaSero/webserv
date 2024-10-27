@@ -6,7 +6,7 @@ CXX = c++
 NAME = test
 
 # ソースファイルとオブジェクトファイル
-SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp Location.cpp
+SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp Location.cpp ../server/Epoll.cpp ../server/SocketAddress.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # デフォルトターゲット

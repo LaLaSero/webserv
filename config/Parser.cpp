@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/26 17:02:38 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/27 10:11:43 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -89,7 +89,7 @@ void Parser::ValidPort(std::string &port)
     for (std::string::iterator it = port.begin(); it != port.end(); ++it) 
 	{
         if (!std::isdigit(*it)) 
-            throw std::invalid_argument("Port is invalid: contains non-numeric characters.");
+            throw std::invalid_argument("Port is invalid: contains non-numeric characters:" + port);
     }
     int portNum = std::atoi(port.c_str());
     if (portNum < 0 || portNum > PortMax) 
@@ -101,21 +101,19 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 	std::string ip;
 	std::string port;
 
-	if (!serv.get_listen_port_().empty())
-		throw std::exception();
-	if (line[line.size() - 1]!=';' )
-		throw std::exception();
 	std::string listen_info;
 	listen_info = line.substr(line.find(' ')+ 1);
 	if (listen_info.find(":") != std::string::npos) 
 	{
     	ip = listen_info.substr(0, listen_info.find(":"));
 		port = listen_info.substr(listen_info.find(":") + 1);
+		port.pop_back();
  	} 
 	else 
 	{
     	ip = kAnyIpAddress;
 		port = listen_info;
+		port.pop_back();
 	}
 	ValidIp(ip);
 	ValidPort(port);
@@ -331,6 +329,7 @@ void Parser::MakeChildServer(Config &conf)
 	}
 	if (line != "}")
 		throw std::exception();
+	conf.addChildServer(serv);
 }
 
 Config Parser::MakeConfig()

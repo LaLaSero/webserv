@@ -1,30 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Config.hpp                                         :+:      :+:    :+:   */
+/*   Epoll.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/19 12:19:40 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:54 by ryanagit         ###   ########.fr       */
+/*   Created: 2024/10/26 17:17:30 by yanagitaryu       #+#    #+#             */
+/*   Updated: 2024/10/27 10:11:36 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
-#include<iostream>
-#include"ChildServer.hpp"
 
-class Config
+
+
+class Epoll
 {
 	public:
-		Config();
-		~Config();
-		Config(const Config &other);
-		Config &operator=(const Config &other);
-
-		void addChildServer(const ChildServer &server);
-		std::vector<ChildServer> getchildserver()const;
 	private:
-		std::vector<ChildServer> ChildServers_;
+		
 };

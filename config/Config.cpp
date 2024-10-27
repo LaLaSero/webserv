@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:20:04 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/26 17:02:38 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/27 10:11:57 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,12 @@ Config& Config::operator=(const Config& other)
 }
 
 
-void Config::AddChildServer(const ChildServer &server)
+void Config::addChildServer(const ChildServer &server)
 {
 	ChildServers_.push_back(server);
+}
+
+std::vector<ChildServer> Config::getchildserver()const
+{
+	return(ChildServers_);
 }

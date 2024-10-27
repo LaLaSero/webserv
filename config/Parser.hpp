@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yanagitaryusei <yanagitaryusei@student.    +#+  +:+       +#+        */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 15:04:00 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/26 17:02:38 by yanagitaryu      ###   ########.fr       */
+/*   Updated: 2024/10/27 10:11:45 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
