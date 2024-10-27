@@ -30,6 +30,10 @@
 #define INADDR_ANY 0
 #endif
 
+#ifndef QUEUE_SIZE
+#define QUEUE_SIZE 10
+#endif
+
 // let me suppose _server_map to be like this:
 // _servers = {
 //     {80, {
@@ -50,13 +54,13 @@ struct ServerConfig
 		: server_name(server_name), root(root), max_body_size(max_body_size)
 	{}
 };
+
 class Server
 {
 	private:
 		struct	addrinfo _hints;
 		struct	addrinfo *_res;
 		char	_buffer[BUFFER_SIZE];
-		// int		_server_fd;
 		std::map<int, std::vector<ServerConfig> > _server_map;
 		std::map<std::string, int> _fd_map;
 
@@ -76,5 +80,6 @@ class Server
 		~Server();
 		void set_server();
 		void start();
+		void sockError(std::string message, int sock_fd, int error_code);
 	
 };
