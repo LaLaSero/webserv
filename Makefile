@@ -1,5 +1,6 @@
 SRC = main.cpp\
 	server/Server.cpp\
+	server/sockSyscall.cpp\
 
 OBJ = $(SRC:.cpp=.o)
 CXX = c++
