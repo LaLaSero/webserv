@@ -55,13 +55,6 @@ Server::makePortFdMap(std::string port, int fd)
 	_fd_map[port] = fd;
 }
 
-
-void
-Server::loop()
-{
-	// サーバーのメインループ
-}
-
 int
 Server::solve_fd(std::string port)
 {
@@ -103,6 +96,7 @@ Server::start()
 		listenSocket(current_fd);
 		std::cout << "current_fd: " << current_fd << std::endl;
 	}
+	setup();
 	loop();
 	closeUsedFd();
 }

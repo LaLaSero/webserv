@@ -70,6 +70,7 @@ class Server
 		void listenSocket(int fd);
 		int solve_fd(std::string port);
 		void loop();
+		void setup();
 		void makePortFdMap(std::string port, int fd);
 		void closeUsedFd();
 	
