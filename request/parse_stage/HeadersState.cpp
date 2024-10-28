@@ -3,7 +3,8 @@
 #include "BodyState.hpp"
 #include "FinishState.hpp"
 
-IParseState* HeadersState::handle(ParseRequest& parser, std::stringstream& ss) {
+IParseState* HeadersState::handle(ParseRequest& parser, std::stringstream& ss)
+{
 	if (!parser.readHeaders(ss))
 		return this;
 

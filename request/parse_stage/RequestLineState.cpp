@@ -3,7 +3,8 @@
 #include "HeadersState.hpp"
 #include "FinishState.hpp"
 
-IParseState* RequestLineState::handle(ParseRequest& parser, std::stringstream& ss) {
+IParseState* RequestLineState::handle(ParseRequest& parser, std::stringstream& ss)
+{
 	if (!parser.readRequestLine(ss))
 		return this;
 	if (!parser.getRequest().getMethod().empty())

@@ -10,7 +10,8 @@ int main()
 	HTTPRequest request;
 	ParseRequest parser(request);
 
-	try {
+	try
+	{
 		parser.parse(buffer);
 		request.print();
 	} catch (const ServerException& e) {

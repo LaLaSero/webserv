@@ -5,8 +5,8 @@
 
 class RequestLineState : public IParseState
 {
-    public:
-    IParseState* handle(ParseRequest& parser, std::stringstream& ss);
+	public:
+		IParseState* handle(ParseRequest& parser, std::stringstream& ss);
 };
 
 #endif

@@ -3,9 +3,10 @@
 
 #include "IParseState.hpp"
 
-class BodyState : public IParseState {
-public:
-    IParseState* handle(ParseRequest& parser, std::stringstream& ss);
+class BodyState : public IParseState
+{
+	public:
+		IParseState* handle(ParseRequest& parser, std::stringstream& ss);
 };
 
 #endif
