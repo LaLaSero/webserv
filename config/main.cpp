@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 20:53:48 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/10/29 21:10:20 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,10 +109,99 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   return fde;
 }
 
+void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) {
+    ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
+
+    // 読み込みイベントの処理
+    if (events & kFdeRead) {
+        char buffer[1024];
+        ssize_t nread = read(fde->fd, buffer, sizeof(buffer));
+        if (nread == -1) {
+            perror("read failed");
+            close(fde->fd);
+            epoll->Unregister(fde);
+            delete fde;
+            delete client_sock;
+            return;
+        }
+
+        // クライアントが接続を切断した場合
+        if (nread == 0) {
+            std::cout << "Client disconnected, fd: " << fde->fd << std::endl;
+            close(fde->fd);
+            epoll->Unregister(fde);
+            delete fde;
+            delete client_sock;
+            return;
+        }
+
+        // 読み込んだデータを処理する（例: HTTPリクエスト解析）
+        // ここでリクエストに応じたレスポンスを作成
+        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World";
+
+        // 書き込みイベントを登録する
+        client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
+        epoll->Modify(fde, kFdeWrite);       // 書き込み準備ができたら書き込みイベントを監視
+    }
+
+    // 書き込みイベントの処理
+    if (events & kFdeWrite) {
+        const std::string &response = client_sock->GetResponse();
+        ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
+        if (nwritten == -1) {
+            perror("write failed");
+            close(fde->fd);
+            epoll->Unregister(fde);
+            delete fde;
+            delete client_sock;
+            return;
+        }
+
+        // 書き込み完了後に接続をクローズ
+        std::cout << "Response sent, closing connection, fd: " << fde->fd << std::endl;
+        close(fde->fd);
+        epoll->Unregister(fde);
+        delete fde;
+        delete client_sock;
+    }
+
+    // エラーイベントの処理
+    if (events & kFdeError) {
+        std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
+        close(fde->fd);
+        epoll->Unregister(fde);
+        delete fde;
+        delete client_sock;
+    }
+}
+
+
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
+    // ListenSocketを取得
+    ListenSocket *listen_sock = static_cast<ListenSocket *>(data);
 
+    // 新しいクライアント接続を受け入れる
+    SocketAddress client_address;
+    socklen_t client_len = client_address.get_length();
+    int client_fd = accept4(fde->fd, client_address.get_addr(), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    if (client_fd == -1) 
+	{
+        perror("accept4 failed");
+        return;
+    }
+	ClientSocket *client(client_fd, client_address, listen_sock->get_config());
+    // 新しい接続を管理するために、FdEventを作成
+    FdEvent *client_fde = CreateFdEvent(client_fd,  HandleClientSocketEvent,client);
+    
+    // epollに新しいクライアント接続を監視対象として登録
+    epoll->register_event(client_fde);
+    epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
+
+    // デバッグ用のメッセージを出力
+    std::cout << "Accepted new connection, fd: " << client_fd << std::endl;
 }
+
 
 
 void set_up_server(EpollAdm &epoll, Config &conf)
