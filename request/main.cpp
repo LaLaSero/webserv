@@ -13,6 +13,8 @@ int main()
 	try
 	{
 		parser.parse(buffer);
+		if (parser.isFinished())
+			std::cout << "Request is finished" << std::endl;
 		request.print();
 	} catch (const ServerException& e) {
 		std::cerr << "ServerException: " << e.what() << std::endl;

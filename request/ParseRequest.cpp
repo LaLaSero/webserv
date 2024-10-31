@@ -39,14 +39,16 @@ void ParseRequest::parse(char *buffer)
 {
 	std::stringstream bufferStream(buffer);
 
-	while (_currentState) {
+	while (_currentState)
+	{
 		IParseState* nextState = _currentState->handle(*this, bufferStream);
-		if (nextState != _currentState) {
+		if (nextState != _currentState)
+		{
 			delete _currentState;
 			_currentState = nextState;
-		} else {
-			break;
 		}
+		else
+			break;
 	}
 }
 
@@ -264,4 +266,14 @@ int ParseRequest::ft_stoi(const std::string& str)
 
 bool ParseRequest::ft_isdigit(char c) {
 	return std::isdigit(static_cast<unsigned char>(c));
+}
+
+bool ParseRequest::isFinished() const
+{
+	return _isFinished;
+}
+
+void ParseRequest::setFinished(bool finished)
+{
+	_isFinished = finished;
 }
