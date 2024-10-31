@@ -88,7 +88,7 @@ bool ParseRequest::readHeaders(std::stringstream &ss)
 	while (getlineWithCRLF(ss, line))
 	{
 		if (line.empty())
-			return true; // ヘッダーの終わり
+			return true;
 		std::vector<std::string> header = split(line, ": ");
 		if (header.size() != 2)
 			throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
@@ -134,51 +134,6 @@ bool ParseRequest::readHeaders(std::stringstream &ss)
 	return false;
 }
 
-
-// bool ParseRequest::readBody(std::stringstream &ss)
-// {
-// 	if (_isChunked) {
-// 		std::string line;
-// 		while (getlineWithCRLF(ss, line)) {
-// 			if (!_isChunkSizeExpected) {
-// 				if (line.empty()) {
-// 					return false;
-// 				}
-// 				if (!isHex(line)) {
-// 					throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-// 				}
-// 				_chunkSize = ft_stoi(line);
-// 				if (_chunkSize == 0) {
-// 					return true;
-// 				}
-// 				_isChunkSizeExpected = true;
-// 			} else {
-// 				if (line.size() != _chunkSize) {
-// 					throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-// 				}
-// 				_request.addBody(line);
-// 				_isChunkSizeExpected = false;
-// 			}
-// 		}
-// 		return false;
-// 	} else {
-// 		std::string line;
-// 		while (getlineWithCRLF(ss, line)) {
-// 			if (line.empty())
-// 				break;
-// 			_request.addBody(line);
-// 			if (_request.getBody().size() > _contentLength)
-// 				throw ServerException(HTTP_PAYLOAD_TOO_LARGE, "Request Entity Too Large");
-// 			if (_request.getBody().size() == _contentLength)
-// 				break;
-// 		}
-// 		if (_request.getBody().size() == _contentLength)
-// 			return true;
-// 		else
-// 			return false;
-// 	}
-// }
-
 bool ParseRequest::readBody(std::stringstream &ss)
 {
 	if (_isChunked) {
@@ -203,7 +158,6 @@ bool ParseRequest::readBody(std::stringstream &ss)
 			return false;
 	}
 }
-
 
 void ParseRequest::finalize()
 {
