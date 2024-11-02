@@ -67,7 +67,8 @@ void EpollAdm::Add(FdEvent *fde, unsigned int events) {
   Set(fde, fde->state | events);
 }
 
-static long GetCurrentTimeMs() {
+static long GetCurrentTimeMs() 
+{
   timeval tv;
 
   gettimeofday(&tv, NULL);
@@ -76,24 +77,23 @@ static long GetCurrentTimeMs() {
 
 std::vector<FdandEvent> EpollAdm::RetrieveTimeouts() 
 {
-  std::vector<FdandEvent> fdee_vec;
+  std::vector<FdandEvent> timeouters;
 
   long current_time = GetCurrentTimeMs();
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {
     FdEvent *fde = it->second;
-    if (fde->state & kFdeTimeout &&
-        current_time - fde->last_active > fde->timeout_ms) {
+    if (fde->state & kFdeTimeout && current_time - fde->last_active > fde->timeout_ms) {
       FdandEvent fdee;
       fdee.fde = fde;
       // TCP FIN が送信したデータより早く来る場合があり､
       // その対策として kFdeError で接続切断をするのではなく､
       // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
       fdee.events = kFdeTimeout | kFdeRead;
-      fdee_vec.push_back(fdee);
+      timeouters.push_back(fdee);
     }
   }
-  return fdee_vec;
+  return timeouters;
 }
 
 std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms) 
@@ -103,16 +103,13 @@ std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms)
   epoll_events.resize(registered_fd_events_.size());
 
   int event_num = epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
-  if (event_num < 0) {
+  if (event_num < 0) 
     throw std::runtime_error("Error occcured in Wait event");
-  }
-
   for (int i = 0; i < event_num; ++i) 
   {
     if (registered_fd_events_.find(epoll_events[i].data.fd) ==registered_fd_events_.end())
             throw std::runtime_error("Error occcured in Wait event");
     FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
-
     fde->last_active = GetCurrentTimeMs();
   }
 

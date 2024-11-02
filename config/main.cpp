@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/29 21:10:20 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/10/30 19:34:38 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,9 +20,7 @@
 
 #define DEFAULT_PATH "test.conf"
 
-int InetPassiveSocket(const char *host, const char *service, int type,
-                             SocketAddress *sockaddr, bool doListen,
-                             int backlog) 
+int InetPassiveSocket(const char *host, const char *service, int type, SocketAddress *sockaddr, bool doListen, int backlog) 
 {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
@@ -248,15 +246,15 @@ void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) {
 
 void Loop(EpollAdm &epoll) {
   // イベントループ
-  while (1) {
+  while (1) 
+  {
     std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
-    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin();
-         it != timeouts.end(); ++it) {
+    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin(); it != timeouts.end(); ++it) 
+	{
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
       InvokeFdEvent(fde, events, &epoll);
     }
-
     std::vector<FdandEvent> result = epoll.WaitEvents(100);
   }
 }
