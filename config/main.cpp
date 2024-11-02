@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/02 15:01:40 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/02 17:12:00 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,6 +186,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
+    std::cout <<"HandleListen called" << std::endl;
     // ListenSocketを取得
     ListenSocket *listen_sock = static_cast<ListenSocket *>(data);
 
@@ -194,7 +195,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
     socklen_t client_len = client_address.get_length();
     int client_fd = accept4(fde->fd, client_address.get_socad(), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (client_fd == -1) 
-	{
+	  {
         perror("accept4 failed");
         return;
     }
@@ -235,7 +236,6 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         SocketAddress socket_address;
         // // ソケットを作成し、リッスン状態にする
        	int fd = InetListen(it->get_listen_ip_(), it->get_listen_port_(), SOMAXCONN, &socket_address);
-
         opened_fd.push_back(fd);  // 使われたFDをリストに追加
 
         // // // ソケットを`EpollAdm`に登録
@@ -243,7 +243,6 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
         epoll.register_event(fde);
         epoll.Add(fde, kFdeRead);  // 読み込みイベントを監視対象にする
-
         // // // 使用済みのIPとポートの組み合わせを記録
         used_ip_ports.push_back(ip_port);
     }
@@ -257,15 +256,15 @@ void Loop(EpollAdm &epoll) {
   std::cout << "Start Loop" << std::endl;
   while (1) 
   {
-    std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
-    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin();it != timeouts.end(); ++it) 
+    std::vector<FdandEvent> result = epoll.WaitEvents(100);
+    for (std::vector<FdandEvent>::const_iterator it = result.begin();it != result.end(); ++it) 
     {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
       std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
       InvokeFdEvent(fde, events, &epoll);
     }
-    std::vector<FdandEvent> result = epoll.WaitEvents(100);
+    std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
   }
 }
 
@@ -291,7 +290,6 @@ int main(int argc, char *argv[])
 	}
 	catch(const std::exception& e)
 	{
-		std::cerr << "Parser Error in Config file" << std::endl;
 		std::cerr << e.what() << std::endl;
 		std::exit(1);
 	}

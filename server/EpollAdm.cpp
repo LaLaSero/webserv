@@ -41,12 +41,32 @@ void EpollAdm::register_event(FdEvent *fde)
   if(registered_fd_events_.find(fde->fd) != registered_fd_events_.end())
         throw std::runtime_error("register_event Error");
   epoll_event epev = CalculateEpollEvent(fde);
-
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) {
         throw std::runtime_error("Epoll Register Error");
   }
   registered_fd_events_[fde->fd] = fde;
 }
+
+void EpollAdm::delete_event(FdEvent *fde)
+{
+    // 登録されたイベントが見つからない場合はエラーをスロー
+    auto it = registered_fd_events_.find(fde->fd);
+    if (it == registered_fd_events_.end()) {
+        throw std::runtime_error("delete_event Error: File descriptor not registered");
+    }
+
+    // epoll_ctl を使ってイベントを削除
+    if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fde->fd, nullptr) < 0) {
+        throw std::runtime_error("Epoll Delete Error");
+    }
+
+    // 登録されたイベントリストからファイルディスクリプタを削除
+    registered_fd_events_.erase(it);
+
+    // FdEvent のメモリを解放
+    delete fde;
+}
+
 
 void EpollAdm::Set(FdEvent *fde, unsigned int events) {
   unsigned int previous_state = fde->state;
@@ -98,23 +118,51 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
 
 std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms) 
 {
-  std::vector<FdandEvent> fdee_vec;
-  std::vector<epoll_event> epoll_events;
-  epoll_events.resize(registered_fd_events_.size());
+    std::vector<FdandEvent> fdee_vec;
+    std::vector<epoll_event> epoll_events;
+    epoll_events.resize(registered_fd_events_.size());
+    int event_num = epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
+    if (event_num < 0) 
+    {
+        throw std::runtime_error("Error occurred in Wait event");
+    }
 
-  int event_num = epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
-  if (event_num < 0) {
-    throw std::runtime_error("Error occcured in Wait event");
-  }
+    for (int i = 0; i < event_num; ++i) 
+    {
+        if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end()) {
+            throw std::runtime_error("Error occurred in Wait event");
+        }
+        
+        FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
+        fde->last_active = GetCurrentTimeMs();
+        // FdandEventの作成と追加
+        FdandEvent fdee;
+        fdee.fde = fde;
+        fdee.events = epoll_events[i].events; // 実際のイベントを設定
+        fdee_vec.push_back(fdee);
+    }
+    return fdee_vec;
+}
 
-  for (int i = 0; i < event_num; ++i) 
-  {
-    if (registered_fd_events_.find(epoll_events[i].data.fd) ==registered_fd_events_.end())
-            throw std::runtime_error("Error occcured in Wait event");
-    FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
 
-    fde->last_active = GetCurrentTimeMs();
-  }
+void EpollAdm::Modify(FdEvent *fde, unsigned int events)
+{
+    // 現在の状態を取得
+    unsigned int previous_state = fde->state;
 
-  return fdee_vec;
+    // 新しい状態を設定
+    fde->state |= events; // 現在の状態に追加する形でイベントを設定
+
+    // 前回の状態と同じ場合、何も変更する必要はない
+    if ((fde->state & ~kFdeTimeout) == (previous_state & ~kFdeTimeout)) {
+        return; // 変更がないためリターン
+    }
+
+    // epoll_event を計算
+    epoll_event epev = CalculateEpollEvent(fde);
+
+    // epoll_ctl を使ってイベントを変更
+    if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) {
+        throw std::runtime_error("Epoll Modify Error");
+    }
 }
