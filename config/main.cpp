@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/30 19:34:38 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/02 14:53:21 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,13 @@
 #include"../server/EpollAdm.hpp"
 #include"../server/SocketAddress.hpp"
 #include"../server/ListenSocket.hpp"
-#include"../server/ConnSocket.hpp"
+#include"../server/ClientSocket.hpp"
 
 #define DEFAULT_PATH "test.conf"
 
-int InetPassiveSocket(const char *host, const char *service, int type, SocketAddress *sockaddr, bool doListen, int backlog) 
+int InetPassiveSocket(const char *host, const char *service, int type,
+                             SocketAddress *sockaddr, bool doListen,
+                             int backlog) 
 {
   struct addrinfo hints;
   struct addrinfo *result, *rp;
@@ -107,9 +109,11 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
   return fde;
 }
 
-void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) {
+void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
+{
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 
+    std::cout << "Request received:\n" << "HandleClient" << std::endl;
     // 読み込みイベントの処理
     if (events & kFdeRead) {
         char buffer[1024];
@@ -117,7 +121,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         if (nread == -1) {
             perror("read failed");
             close(fde->fd);
-            epoll->Unregister(fde);
+            epoll->delete_event(fde);
             delete fde;
             delete client_sock;
             return;
@@ -127,12 +131,18 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         if (nread == 0) {
             std::cout << "Client disconnected, fd: " << fde->fd << std::endl;
             close(fde->fd);
-            epoll->Unregister(fde);
+            epoll->delete_event(fde);
             delete fde;
             delete client_sock;
             return;
         }
 
+        
+        buffer[nread] = '\0'; // null終端を追加
+        std::string request(buffer); // 読み込んだデータを文字列に変換
+
+        // リクエストを表示
+        std::cout << "Request received:\n" << request << std::endl;
         // 読み込んだデータを処理する（例: HTTPリクエスト解析）
         // ここでリクエストに応じたレスポンスを作成
         std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World";
@@ -149,7 +159,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         if (nwritten == -1) {
             perror("write failed");
             close(fde->fd);
-            epoll->Unregister(fde);
+            epoll->delete_event(fde);
             delete fde;
             delete client_sock;
             return;
@@ -158,7 +168,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         // 書き込み完了後に接続をクローズ
         std::cout << "Response sent, closing connection, fd: " << fde->fd << std::endl;
         close(fde->fd);
-        epoll->Unregister(fde);
+        epoll->delete_event(fde);
         delete fde;
         delete client_sock;
     }
@@ -167,7 +177,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
     if (events & kFdeError) {
         std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
         close(fde->fd);
-        epoll->Unregister(fde);
+        epoll->delete_event(fde);
         delete fde;
         delete client_sock;
     }
@@ -182,16 +192,15 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
     // 新しいクライアント接続を受け入れる
     SocketAddress client_address;
     socklen_t client_len = client_address.get_length();
-    int client_fd = accept4(fde->fd, client_address.get_addr(), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    int client_fd = accept4(fde->fd, client_address.get_socad(), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
     if (client_fd == -1) 
 	{
         perror("accept4 failed");
         return;
     }
-	ClientSocket *client(client_fd, client_address, listen_sock->get_config());
+	  ClientSocket client(client_fd, client_address, listen_sock->GetConfig());
     // 新しい接続を管理するために、FdEventを作成
-    FdEvent *client_fde = CreateFdEvent(client_fd,  HandleClientSocketEvent,client);
-    
+    FdEvent *client_fde = CreateFdEvent(client_fd,  HandleClientSocketEvent, &client);
     // epollに新しいクライアント接続を監視対象として登録
     epoll->register_event(client_fde);
     epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
@@ -245,14 +254,15 @@ void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) {
 }
 
 void Loop(EpollAdm &epoll) {
-  // イベントループ
+  std::cout << "Start Loop" << std::endl;
   while (1) 
   {
     std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
-    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin(); it != timeouts.end(); ++it) 
-	{
+    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin();it != timeouts.end(); ++it) 
+    {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
+      std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
       InvokeFdEvent(fde, events, &epoll);
     }
     std::vector<FdandEvent> result = epoll.WaitEvents(100);
@@ -285,5 +295,4 @@ int main(int argc, char *argv[])
 		std::cerr << e.what() << std::endl;
 		std::exit(1);
 	}
-	
 }
