@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/02 14:53:21 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/02 15:01:40 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 {
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 
-    std::cout << "Request received:\n" << "HandleClient" << std::endl;
+    std::cout << "Start Handle Event" << std::endl;
     // 読み込みイベントの処理
     if (events & kFdeRead) {
         char buffer[1024];
