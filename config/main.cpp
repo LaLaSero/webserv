@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/02 17:12:00 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/02 21:13:50 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 {
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 
-    std::cout << "Start Handle Event" << std::endl;
+    std::cout << "Start ClientSocket Event called" << std::endl;
     // 読み込みイベントの処理
     if (events & kFdeRead) {
         char buffer[1024];
@@ -128,8 +128,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         }
 
         // クライアントが接続を切断した場合
-        if (nread == 0) {
-            std::cout << "Client disconnected, fd: " << fde->fd << std::endl;
+        if (nread == 0) 
+        {
             close(fde->fd);
             epoll->delete_event(fde);
             delete fde;
@@ -148,7 +148,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World";
 
         // 書き込みイベントを登録する
-        client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
+        // client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
         epoll->Modify(fde, kFdeWrite);       // 書き込み準備ができたら書き込みイベントを監視
     }
 
@@ -186,28 +186,25 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
-    std::cout <<"HandleListen called" << std::endl;
+    // std::cout <<"HandleListen called" << std::endl;
     // ListenSocketを取得
-    ListenSocket *listen_sock = static_cast<ListenSocket *>(data);
-
-    // 新しいクライアント接続を受け入れる
-    SocketAddress client_address;
-    socklen_t client_len = client_address.get_length();
-    int client_fd = accept4(fde->fd, client_address.get_socad(), &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
-    if (client_fd == -1) 
-	  {
-        perror("accept4 failed");
-        return;
+    (void)fde;
+    ListenSocket *listen_sock = reinterpret_cast<ListenSocket *>(data);
+    if (events & kFdeRead)
+    { 
+      // 新しいクライアント接続を受け入れる
+      struct sockaddr_storage client_addr;
+      socklen_t addrlen = sizeof(struct sockaddr_storage);
+      ClientSocket *result = listen_sock->AcceptNewConnection();
+      FdEvent *client_fde = CreateFdEvent(result->GetFd(),  HandleClientSocketEvent, result);
+      // epollに新しいクライアント接続を監視対象として登録
+      epoll->register_event(client_fde);
+      epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
     }
-	  ClientSocket client(client_fd, client_address, listen_sock->GetConfig());
-    // 新しい接続を管理するために、FdEventを作成
-    FdEvent *client_fde = CreateFdEvent(client_fd,  HandleClientSocketEvent, &client);
-    // epollに新しいクライアント接続を監視対象として登録
-    epoll->register_event(client_fde);
-    epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
-
-    // デバッグ用のメッセージを出力
-    std::cout << "Accepted new connection, fd: " << client_fd << std::endl;
+  if (events & kFdeError) 
+  {
+    throw std::runtime_error("Errorrrrrr");
+  }
 }
 
 
@@ -229,15 +226,13 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         std::string port_any_ip = "0.0.0.0:" + it->get_listen_port_();
         if (std::find(used_ip_ports.begin(), used_ip_ports.end(), ip_port) != used_ip_ports.end() ||
             std::find(used_ip_ports.begin(), used_ip_ports.end(), port_any_ip) != used_ip_ports.end())
-        {
             continue;
-        }
         // // ソケットアドレスを作成
         SocketAddress socket_address;
         // // ソケットを作成し、リッスン状態にする
        	int fd = InetListen(it->get_listen_ip_(), it->get_listen_port_(), SOMAXCONN, &socket_address);
-        opened_fd.push_back(fd);  // 使われたFDをリストに追加
-
+        if(fd < 0)
+          throw std::runtime_error("InetListen Error");
         // // // ソケットを`EpollAdm`に登録
         ListenSocket *listen_sock = new ListenSocket(fd, socket_address, conf);
         FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
@@ -245,10 +240,12 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         epoll.Add(fde, kFdeRead);  // 読み込みイベントを監視対象にする
         // // // 使用済みのIPとポートの組み合わせを記録
         used_ip_ports.push_back(ip_port);
+        opened_fd.push_back(fd); 
     }
 }
 
-void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) {
+void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) 
+{
   fde->func(fde, events, fde->data, epoll);
 }
 
@@ -256,15 +253,21 @@ void Loop(EpollAdm &epoll) {
   std::cout << "Start Loop" << std::endl;
   while (1) 
   {
+    std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
+    for (std::vector<FdandEvent>::const_iterator it = timeouts.begin();it != timeouts.end(); ++it) 
+    {
+      FdEvent *fde = it->fde;
+      unsigned int events = it->events;
+      InvokeFdEvent(fde, events, &epoll);
+    }
     std::vector<FdandEvent> result = epoll.WaitEvents(100);
     for (std::vector<FdandEvent>::const_iterator it = result.begin();it != result.end(); ++it) 
     {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
-      std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
+      // std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
       InvokeFdEvent(fde, events, &epoll);
     }
-    std::vector<FdandEvent> timeouts = epoll.RetrieveTimeouts();
   }
 }
 

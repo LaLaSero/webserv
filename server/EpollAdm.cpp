@@ -28,6 +28,36 @@ epoll_event CalculateEpollEvent(FdEvent *fde)
 }
 
 
+FdandEvent CalculateFdandEvent(FdEvent *fde, epoll_event epev) {
+  unsigned int events = 0;
+  if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) {
+    events |= kFdeRead;
+  }
+  if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) {
+    events |= kFdeWrite;
+  }
+  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+    if (epev.events & EPOLLERR)
+        throw std::exception();
+    if (epev.events & EPOLLHUP)
+        throw std::exception();
+    if (epev.events & EPOLLRDHUP) 
+        throw std::exception();
+    // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
+    // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN
+    // が先に到着する可能性がある｡ これを避けるためには EPOLLRDHUP
+    // を受け取った後に read を行い0が返ってくることを確かめる必要がある｡
+    //
+    // https://ymmt.hatenablog.com/entry/2013/09/05/150116
+    events |= kFdeRead | kFdeError;
+  }
+
+  FdandEvent fdee;
+  fdee.fde = fde;
+  fdee.events = events;
+  return fdee;
+}
+
 EpollAdm::EpollAdm():epfd_(epoll_create1(0)) 
 {
     if (epfd_ == -1) 
@@ -41,17 +71,17 @@ void EpollAdm::register_event(FdEvent *fde)
   if(registered_fd_events_.find(fde->fd) != registered_fd_events_.end())
         throw std::runtime_error("register_event Error");
   epoll_event epev = CalculateEpollEvent(fde);
-  if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) {
+  if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) 
         throw std::runtime_error("Epoll Register Error");
-  }
   registered_fd_events_[fde->fd] = fde;
 }
 
 void EpollAdm::delete_event(FdEvent *fde)
 {
     // 登録されたイベントが見つからない場合はエラーをスロー
-    auto it = registered_fd_events_.find(fde->fd);
-    if (it == registered_fd_events_.end()) {
+    std::map<int,FdEvent*>::iterator it = registered_fd_events_.find(fde->fd);
+    if (it == registered_fd_events_.end()) 
+    {
         throw std::runtime_error("delete_event Error: File descriptor not registered");
     }
 
@@ -123,23 +153,17 @@ std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms)
     epoll_events.resize(registered_fd_events_.size());
     int event_num = epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
     if (event_num < 0) 
-    {
         throw std::runtime_error("Error occurred in Wait event");
-    }
-
     for (int i = 0; i < event_num; ++i) 
     {
         if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end()) {
             throw std::runtime_error("Error occurred in Wait event");
         }
-        
         FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
-        fde->last_active = GetCurrentTimeMs();
         // FdandEventの作成と追加
-        FdandEvent fdee;
-        fdee.fde = fde;
-        fdee.events = epoll_events[i].events; // 実際のイベントを設定
+        FdandEvent fdee =  CalculateFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
+        fde->last_active = GetCurrentTimeMs();
     }
     return fdee_vec;
 }

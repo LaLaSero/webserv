@@ -17,11 +17,15 @@
 
 class ClientSocket : public Socket {
  public:
-      void SetResponse(const std::string& resp);
       const std::string GetResponse(void) const;
       ClientSocket(int client_fd, SocketAddress client_address, const Config &conf);
+      ClientSocket(int fd, const SocketAddress &server_addr,
+                       const SocketAddress &client_addr,
+                       const Config &config) ;
  private:
-  std::string response_;
+  const SocketAddress client_addr_;
+  char *response_;
+  bool is_shutdown_;
   ClientSocket();
   ClientSocket &operator=(const ClientSocket &rhs);
 };
