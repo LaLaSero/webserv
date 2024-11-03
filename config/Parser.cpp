@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 16:16:19 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 19:16:38 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -260,9 +260,11 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 	red = EmitEmpty(red);
 	if (red != "{")
 		throw std::runtime_error("ParseLocation Error:'{' is not found" + red);
-	while (std::getline(content_, red) && red !=  "}")
+	while (std::getline(content_, red))
 	{
 		red = EmitEmpty(red);
+		if (red == "}")
+			break ;
 		std::string tmp;
 		if (check_syntax(red, "root ",true))
 		{
@@ -309,7 +311,6 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 		else
 			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
-	red = EmitEmpty(red);
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
 	server.add_location(loc);
