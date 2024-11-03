@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/02 21:13:50 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 12:30:48 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 
     std::cout << "Start ClientSocket Event called" << std::endl;
     // 読み込みイベントの処理
-    if (events & kFdeRead) {
+    if (events & kFdeRead) 
+    {
+        std::cout << "start reading" << std::endl;
         char buffer[1024];
         ssize_t nread = read(fde->fd, buffer, sizeof(buffer));
         if (nread == -1) {
@@ -145,18 +147,20 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         std::cout << "Request received:\n" << request << std::endl;
         // 読み込んだデータを処理する（例: HTTPリクエスト解析）
         // ここでリクエストに応じたレスポンスを作成
-        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World";
 
         // 書き込みイベントを登録する
         // client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
+        std::cout << "End Request" << std::endl;
         epoll->Modify(fde, kFdeWrite);       // 書き込み準備ができたら書き込みイベントを監視
     }
 
     // 書き込みイベントの処理
-    if (events & kFdeWrite) {
-        const std::string &response = client_sock->GetResponse();
+    if (events & kFdeWrite) 
+    {
+        const std::string &response = "It is Response";
         ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
-        if (nwritten == -1) {
+        if (nwritten == -1) 
+        {
             perror("write failed");
             close(fde->fd);
             epoll->delete_event(fde);
@@ -164,12 +168,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             delete client_sock;
             return;
         }
-
         // 書き込み完了後に接続をクローズ
         std::cout << "Response sent, closing connection, fd: " << fde->fd << std::endl;
-        close(fde->fd);
         epoll->delete_event(fde);
-        delete fde;
         delete client_sock;
     }
 
@@ -246,6 +247,7 @@ void set_up_server(EpollAdm &epoll, Config &conf)
 
 void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) 
 {
+  std::cout <<"Invoke called" << std::endl; 
   fde->func(fde, events, fde->data, epoll);
 }
 
@@ -265,7 +267,7 @@ void Loop(EpollAdm &epoll) {
     {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
-      // std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
+      std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
       InvokeFdEvent(fde, events, &epoll);
     }
   }
