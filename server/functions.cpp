@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 16:16:30 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 20:44:06 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,15 +32,12 @@ int InetPassiveSocket(const char *host, const char *service, int type,
   if (s != 0)
     return -1;
 
-  /* Walk through returned list until we find an address structure
-  that can be used to successfully create and bind a socket */
   optval = 1;
   for (rp = result; rp != NULL; rp = rp->ai_next) {
     sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
                  rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
-
     if (doListen) {
       if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) ==
           -1) {
@@ -57,17 +54,18 @@ int InetPassiveSocket(const char *host, const char *service, int type,
     close(sfd);
   }
 
-  if (rp != NULL && doListen) {
+  if (rp != NULL && doListen) 
+  {
     if (listen(sfd, backlog) == -1) 
-	{
+	  {
       freeaddrinfo(result);
       return -1;
     }
   }
   if (rp != NULL && sockaddr != NULL) 
   {
-	sockaddr->set_socad(rp->ai_addr);
-	sockaddr->set_length(rp->ai_addrlen);
+	  sockaddr->set_socad(rp->ai_addr);
+	  sockaddr->set_length(rp->ai_addrlen);
   }
   freeaddrinfo(result);
   if (rp == NULL)

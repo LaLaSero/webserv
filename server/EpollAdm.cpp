@@ -43,12 +43,6 @@ FdandEvent CalculateFdandEvent(FdEvent *fde, epoll_event epev) {
         throw std::exception();
     if (epev.events & EPOLLRDHUP) 
         throw std::exception();
-    // EPOLLRDHUP は TCP FIN を受信した場合にフラグが立つが､
-    // ネットワークの回線の都合で先に送ったデータよりも後に送った TCP FIN
-    // が先に到着する可能性がある｡ これを避けるためには EPOLLRDHUP
-    // を受け取った後に read を行い0が返ってくることを確かめる必要がある｡
-    //
-    // https://ymmt.hatenablog.com/entry/2013/09/05/150116
     events |= kFdeRead | kFdeError;
   }
 

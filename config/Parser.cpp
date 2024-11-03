@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 19:16:38 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 20:30:28 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -306,10 +306,10 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 			i = max_stos(tmp);
 			loc.setClientMaxBodySize(i);
 		}
+		else
+			throw std::runtime_error("ParseLocation Error:unkown word is found");
 		// we have to add cgi infomation;
 		// else if ()
-		else
-			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
