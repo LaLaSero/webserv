@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:38:42 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 13:40:18 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 16:07:54 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 void set_up_server(EpollAdm &epoll, Config &conf);
 
 // イベントの実行
-void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll);
+void AwakeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll);
 
 // ループ処理
 void Loop(EpollAdm &epoll);

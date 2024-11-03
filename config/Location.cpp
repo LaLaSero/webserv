@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:53 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 15:03:13 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,8 @@ size_t Location::getClientMaxBodySize() const {
     return client_max_body_size_;
 }
 
+
+
 // Setter
 void Location::setPath(const std::string &path) {
     path_ = path;
@@ -92,3 +94,4 @@ void Location::add_Acceptedmethods(const std::string tmp)
 {
 	accepted_methods_.push_back(tmp);
 }
+

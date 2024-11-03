@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 13:39:37 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 16:15:37 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,10 +37,9 @@ int main(int argc, char *argv[])
 		Parser pas;
 		pas.LoadFile(config_file_path);
 		Config conf = pas.MakeConfig();
-
 		EpollAdm epo;
 		set_up_server(epo, conf);
-    Loop(epo);
+    	Loop(epo);
 	}
 	catch(const std::exception& e)
 	{

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 14:42:09 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 16:16:19 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,10 @@ void Parser::ValidIp(std::string &ip)
     std::string part;
     std::istringstream ss(ip);
 
-    while (std::getline(ss, part, '.')) {
+    while (std::getline(ss, part, '.')) 
+	{
         parts.push_back(part);
     }
-
     if (parts.size() != 4) {
         std::cerr << ip << " is invalid: should contain 4 parts." << std::endl;
 		throw std::exception();
@@ -75,7 +75,7 @@ void Parser::ValidIp(std::string &ip)
         int num = std::atoi(it->c_str());
         if (num < 0 || num > 255) 
 		{
-            std::cout << ip << " is invalid: each part should be between 0 and 255." << std::endl;
+            std::cerr << ip << " is invalid: each part should be between 0 and 255." << std::endl;
 			throw std::exception();
         }
     }
@@ -124,7 +124,6 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 void Parser::ValidChildServerName(const std::string& str) {
     if (str.empty()) 
 	    throw std::runtime_error("error empty:" + str);
-
     if (str.front() == '.' || str.back() == '.') 
 		throw std::runtime_error("error dot in edge:" + str);
     for (size_t i = 0; i < str.length(); ++i)
@@ -186,7 +185,8 @@ void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 		body = body.substr(body.find(' ') + 1, body.size());
 	}
 	std::string page;
-	page = body.substr(0,body.size() - 1);
+	page = body.substr(0);
+	page.pop_back();
 	if (status_vec.empty())
 		throw std::runtime_error("ParseErrorpage status empty");
 	unsigned long i;

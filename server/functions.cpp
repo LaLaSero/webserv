@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 13:48:54 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 16:16:30 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ int InetListen(const std::string &host, const std::string &service, int backlog,
   else
     host_cstr = host.c_str();
   int fd = InetPassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr, true, backlog);
-	if (fd < 0) 
+	if (fd < 0)
     	throw std::runtime_error("InetListen Error");
 	return fd;
 }
@@ -120,7 +120,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             delete client_sock;
             return;
         }
-
         // クライアントが接続を切断した場合
         if (nread == 0) 
         {
@@ -130,8 +129,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             delete client_sock;
             return;
         }
-
-        
         buffer[nread] = '\0'; // null終端を追加
         std::string request(buffer); // 読み込んだデータを文字列に変換
 
@@ -213,7 +210,11 @@ void set_up_server(EpollAdm &epoll, Config &conf)
     for (std::vector<ChildServer>::iterator it = Children.begin(); it != Children.end(); ++it)
     {
         // IPアドレスとポートを連結した文字列を作成
-        std::string ip_port = it->get_listen_ip_() + ":" + it->get_listen_port_();
+        if (it->get_listen_ip_().empty())
+          it->set_listen_ip_("0.0.0.0");
+        if (it->get_listen_port_().empty())
+          it->set_listen_port_("8080");
+        std::string ip_port = it->get_listen_port_();
         std::string port_any_ip = "0.0.0.0:" + it->get_listen_port_();
         if (std::find(used_ip_ports.begin(), used_ip_ports.end(), ip_port) != used_ip_ports.end() ||
             std::find(used_ip_ports.begin(), used_ip_ports.end(), port_any_ip) != used_ip_ports.end())
@@ -235,9 +236,9 @@ void set_up_server(EpollAdm &epoll, Config &conf)
     }
 }
 
-void InvokeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) 
+void AwakeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) 
 {
-  std::cout <<"Invoke called" << std::endl; 
+  std::cout <<"Awake called" << std::endl; 
   fde->func(fde, events, fde->data, epoll);
 }
 
@@ -250,7 +251,7 @@ void Loop(EpollAdm &epoll) {
     {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
-      InvokeFdEvent(fde, events, &epoll);
+      AwakeFdEvent(fde, events, &epoll);
     }
     std::vector<FdandEvent> result = epoll.WaitEvents(100);
     for (std::vector<FdandEvent>::const_iterator it = result.begin();it != result.end(); ++it) 
@@ -258,7 +259,7 @@ void Loop(EpollAdm &epoll) {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
       std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
-      InvokeFdEvent(fde, events, &epoll);
+      AwakeFdEvent(fde, events, &epoll);
     }
   }
 }
