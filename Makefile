@@ -3,10 +3,10 @@ CXX = c++
 # CXXFLAGS = -Wall -Wextra -Werror
 
 # 出力ファイル名
-NAME = test
+NAME = webserv
 
 # ソースファイルとオブジェクトファイル
-SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp Location.cpp ../server/EpollAdm.cpp ../server/SocketAddress.cpp ../server/Socket.cpp ../server/ListenSocket.cpp ../server/ClientSocket.cpp
+SRCS = main.cpp config/Config.cpp config/ChildServer.cpp config/Parser.cpp config/Location.cpp server/EpollAdm.cpp server/SocketAddress.cpp server/Socket.cpp server/ListenSocket.cpp server/ClientSocket.cpp server/functions.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # デフォルトターゲット
