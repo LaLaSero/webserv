@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:43 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 14:42:09 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,7 +189,7 @@ void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 	page = body.substr(0,body.size() - 1);
 	if (status_vec.empty())
 		throw std::runtime_error("ParseErrorpage status empty");
-	int i;
+	unsigned long i;
 	i = 0;
 	while (i < status_vec.size())
 	{
@@ -238,6 +238,14 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 	loc.setRedirection(pair);
 }
 
+static std::string EmitEmpty(std::string &original)
+{
+	size_t i =0;
+	while(original[i] ==' ')
+		i++;
+	return (original.substr(i));
+}
+
 
 void Parser::ParseLocation(ChildServer &server, std::string &line)
 {
@@ -249,10 +257,12 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 	std::string red;
 	if (!std::getline(content_, red))
 		throw std::runtime_error("ParseLocation Error:'{}' is not found ");
+	red = EmitEmpty(red);
 	if (red != "{")
 		throw std::runtime_error("ParseLocation Error:'{' is not found" + red);
 	while (std::getline(content_, red) && red !=  "}")
 	{
+		red = EmitEmpty(red);
 		std::string tmp;
 		if (check_syntax(red, "root ",true))
 		{
@@ -290,9 +300,8 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 			tmp.erase(tmp.size() - 1);
 			if (tmp.size() > 7)
 				throw  std::runtime_error("ParseLocation Error:';' too large client_max " + red);
-			std::stringstream ss(tmp);
 			size_t i;
-			ss >> i;
+			i = max_stos(tmp);
 			loc.setClientMaxBodySize(i);
 		}
 		// we have to add cgi infomation;
@@ -300,6 +309,7 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 		else
 			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
+	red = EmitEmpty(red);
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
 	server.add_location(loc);
@@ -314,6 +324,7 @@ void Parser::MakeChildServer(Config &conf)
 		throw std::exception();
 	while(std::getline(content_, line) && line !=  "}")
 	{
+		line = EmitEmpty(line);
 		if (check_syntax(line, "listen ",true))
 			ParseListen(serv, line);
 		else if (check_syntax(line, "server_name ", true))

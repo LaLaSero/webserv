@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 13:39:02 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 13:48:54 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -186,8 +186,6 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
     if (events & kFdeRead)
     { 
       // 新しいクライアント接続を受け入れる
-      struct sockaddr_storage client_addr;
-      socklen_t addrlen = sizeof(struct sockaddr_storage);
       ClientSocket *result = listen_sock->AcceptNewConnection();
       FdEvent *client_fde = CreateFdEvent(result->GetFd(),  HandleClientSocketEvent, result);
       // epollに新しいクライアント接続を監視対象として登録
