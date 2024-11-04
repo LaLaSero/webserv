@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/04 17:43:13 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/04 17:49:14 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -140,7 +140,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 
         // 書き込みイベントを登録する
         client_sock->SetResponse(client_sock->GetResponse() + request); // クライアントソケットにレスポンスを保存
-        if (request == "keep\r\n")
+        //Now if "keep" is found in first four characters keeo alive
+        if (request.substr(0,4) == "keep")
           std::cout << "ok keep alive" << std::endl;
         else
           epoll->Modify(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
