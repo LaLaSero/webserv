@@ -12,7 +12,7 @@
 
 #include"EpollAdm.hpp"
 
-epoll_event CalculateEpollEvent(FdEvent *fde) 
+epoll_event MakeEpollEvent(FdEvent *fde) 
 {
   epoll_event epev;
   epev.events = 0;
@@ -28,7 +28,7 @@ epoll_event CalculateEpollEvent(FdEvent *fde)
 }
 
 
-FdandEvent CalculateFdandEvent(FdEvent *fde, epoll_event epev) {
+FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev) {
   unsigned int events = 0;
   if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) {
     events |= kFdeRead;
@@ -64,7 +64,7 @@ void EpollAdm::register_event(FdEvent *fde)
 {
   if(registered_fd_events_.find(fde->fd) != registered_fd_events_.end())
         throw std::runtime_error("register_event Error");
-  epoll_event epev = CalculateEpollEvent(fde);
+  epoll_event epev = MakeEpollEvent(fde);
   if (epoll_ctl(epfd_, EPOLL_CTL_ADD, fde->fd, &epev) < 0) 
         throw std::runtime_error("Epoll Register Error");
   registered_fd_events_[fde->fd] = fde;
@@ -99,21 +99,18 @@ void EpollAdm::Set(FdEvent *fde, unsigned int events) {
   fde->state = events;
   // 前回と同じだったら epoll_ctl は実行しない
   // kFdeTimeout が変わっても epoll を変更する必要はない
-  if ((fde->state & ~kFdeTimeout) == (previous_state & ~kFdeTimeout)) {
+  if ((fde->state % ~kFdeTimeout) == (previous_state % ~kFdeTimeout)) 
     return;
-  }
-
-  epoll_event epev = CalculateEpollEvent(fde);
-  if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) {
+  epoll_event epev = MakeEpollEvent(fde);
+  if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0)
         throw std::runtime_error("Epoll Set Error");
-  }
 }
 
 void EpollAdm::Add(FdEvent *fde, unsigned int events) {
   Set(fde, fde->state | events);
 }
 
-static long GetCurrentTimeMs() {
+static long GetNowTime() {
   timeval tv;
 
   gettimeofday(&tv, NULL);
@@ -124,17 +121,14 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
 {
   std::vector<FdandEvent> fdee_vec;
 
-  long current_time = GetCurrentTimeMs();
+  long current_time = GetNowTime();
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {
     FdEvent *fde = it->second;
-    if (fde->state & kFdeTimeout &&
-        current_time - fde->last_active > fde->timeout_ms) {
+    if (fde->state / kFdeTimeout && current_time - fde->last_active > fde->timeout_ms) 
+    {
       FdandEvent fdee;
       fdee.fde = fde;
-      // TCP FIN が送信したデータより早く来る場合があり､
-      // その対策として kFdeError で接続切断をするのではなく､
-      // read(conn_fd) の返り値が0(EOF)または-1(Error)だったら切断する｡
       fdee.events = kFdeTimeout | kFdeRead;
       fdee_vec.push_back(fdee);
     }
@@ -142,7 +136,7 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
   return fdee_vec;
 }
 
-std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms) 
+std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms) 
 {
     std::vector<FdandEvent> fdee_vec;
     std::vector<epoll_event> epoll_events;
@@ -152,14 +146,13 @@ std::vector<FdandEvent> EpollAdm::WaitEvents(int timeout_ms)
         throw std::runtime_error("Error occurred in Wait event");
     for (int i = 0; i < event_num; ++i) 
     {
-        if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end()) {
+        if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end())
             throw std::runtime_error("Error occurred in Wait event");
-        }
         FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
         // FdandEventの作成と追加
-        FdandEvent fdee =  CalculateFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
+        FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
-        fde->last_active = GetCurrentTimeMs();
+        fde->last_active =GetNowTime();
     }
     return fdee_vec;
 }
@@ -174,15 +167,11 @@ void EpollAdm::Modify(FdEvent *fde, unsigned int events)
     fde->state |= events; // 現在の状態に追加する形でイベントを設定
 
     // 前回の状態と同じ場合、何も変更する必要はない
-    if ((fde->state & ~kFdeTimeout) == (previous_state & ~kFdeTimeout)) {
+    if ((fde->state % kFdeTimeout) == (previous_state % kFdeTimeout))
         return; // 変更がないためリターン
-    }
-
     // epoll_event を計算
-    epoll_event epev = CalculateEpollEvent(fde);
-
+    epoll_event epev = MakeEpollEvent(fde);
     // epoll_ctl を使ってイベントを変更
-    if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) {
-        throw std::runtime_error("Epoll Modify Error");
-    }
+    if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) 
+        throw std::runtime_error("Epoll Modify Error: epoll_ctl failed");
 }

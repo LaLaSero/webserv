@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:38:42 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 16:07:54 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/04 12:18:22 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #include"ClientSocket.hpp"
 
 // Socket関連
-int InetPassiveSocket(const char *host, const char *service, int type,
+int PreparePassiveSocket(const char *host, const char *service, int type,
                       SocketAddress *sockaddr, bool doListen,
                       int backlog);
 

@@ -6,54 +6,57 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 20:44:06 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/04 12:38:32 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include"functions.hpp"
 
-int InetPassiveSocket(const char *host, const char *service, int type,
-                             SocketAddress *sockaddr, bool doListen,
-                             int backlog) 
+static void prepare_hints(struct addrinfo &hints, int type)
 {
-  struct addrinfo hints;
-  struct addrinfo *result, *rp;
-  int sfd, optval, s;
-
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_canonname = NULL;
   hints.ai_addr = NULL;
   hints.ai_next = NULL;
   hints.ai_socktype = type;
-  hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-  hints.ai_flags = AI_PASSIVE; /* Use wildcadrd IP address */
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE; 
+}
 
-  s = getaddrinfo(host, service, &hints, &result);
-  if (s != 0)
-    return -1;
 
+int PreparePassiveSocket(const char *host, const char *service, int type, SocketAddress *sockaddr, bool doListen,int backlog) 
+{
+  struct addrinfo hints;
+  struct addrinfo *result, *rp;
+  int sfd;
+  int res;
+
+  prepare_hints(hints,type);
+  res = getaddrinfo(host, service, &hints, &result);
+  if (res != 0)
+    return (-1);
+  int optval;
   optval = 1;
-  for (rp = result; rp != NULL; rp = rp->ai_next) {
+  for (rp = result; rp != NULL; rp = rp->ai_next) 
+  {
     sfd = socket(rp->ai_family, rp->ai_socktype | SOCK_CLOEXEC | SOCK_NONBLOCK,
                  rp->ai_protocol);
     if (sfd == -1)
       continue; /* On error, try next address */
-    if (doListen) {
-      if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) ==
-          -1) {
+    if (doListen) 
+    {
+      if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) ==-1) 
+      {
         close(sfd);
         freeaddrinfo(result);
         return -1;
       }
     }
-
     if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
       break; /* Success */
-
     /* bind() failed: close this socket and try next address */
     close(sfd);
   }
-
   if (rp != NULL && doListen) 
   {
     if (listen(sfd, backlog) == -1) 
@@ -82,7 +85,7 @@ int InetListen(const std::string &host, const std::string &service, int backlog,
     host_cstr = NULL;
   else
     host_cstr = host.c_str();
-  int fd = InetPassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr, true, backlog);
+  int fd = PreparePassiveSocket(host_cstr, service.c_str(), SOCK_STREAM, sockaddr, true, backlog);
 	if (fd < 0)
     	throw std::runtime_error("InetListen Error");
 	return fd;
@@ -103,14 +106,14 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 {
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 
-    std::cout << "Start ClientSocket Event called" << std::endl;
     // 読み込みイベントの処理
     if (events & kFdeRead) 
     {
         std::cout << "start reading" << std::endl;
         char buffer[1024];
-        ssize_t nread = read(fde->fd, buffer, sizeof(buffer));
-        if (nread == -1) {
+        ssize_t readsize = read(fde->fd, buffer, sizeof(buffer));
+        if (readsize == -1) 
+        {
             perror("read failed");
             close(fde->fd);
             epoll->delete_event(fde);
@@ -119,7 +122,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             return;
         }
         // クライアントが接続を切断した場合
-        if (nread == 0) 
+        if (readsize == 0) 
         {
             close(fde->fd);
             epoll->delete_event(fde);
@@ -127,17 +130,16 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             delete client_sock;
             return;
         }
-        buffer[nread] = '\0'; // null終端を追加
+        buffer[readsize] = '\0'; // null終端を追加
         std::string request(buffer); // 読み込んだデータを文字列に変換
 
         // リクエストを表示
-        std::cout << "Request received:\n" << request << std::endl;
+        std::cout <<  request << std::endl;
         // 読み込んだデータを処理する（例: HTTPリクエスト解析）
         // ここでリクエストに応じたレスポンスを作成
 
         // 書き込みイベントを登録する
         // client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
-        std::cout << "End Request" << std::endl;
         epoll->Modify(fde, kFdeWrite);       // 書き込み準備ができたら書き込みイベントを監視
     }
 
@@ -236,11 +238,11 @@ void set_up_server(EpollAdm &epoll, Config &conf)
 
 void AwakeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll) 
 {
-  std::cout <<"Awake called" << std::endl; 
   fde->func(fde, events, fde->data, epoll);
 }
 
-void Loop(EpollAdm &epoll) {
+void Loop(EpollAdm &epoll) 
+{
   std::cout << "Start Loop" << std::endl;
   while (1) 
   {
@@ -251,12 +253,11 @@ void Loop(EpollAdm &epoll) {
       unsigned int events = it->events;
       AwakeFdEvent(fde, events, &epoll);
     }
-    std::vector<FdandEvent> result = epoll.WaitEvents(100);
+    std::vector<FdandEvent> result = epoll.CheckEvents(100);
     for (std::vector<FdandEvent>::const_iterator it = result.begin();it != result.end(); ++it) 
     {
       FdEvent *fde = it->fde;
       unsigned int events = it->events;
-      std::cout << "Event received for fd: " << fde->fd << ", events: " << events << std::endl;
       AwakeFdEvent(fde, events, &epoll);
     }
   }
