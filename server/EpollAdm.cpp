@@ -28,14 +28,13 @@ epoll_event MakeEpollEvent(FdEvent *fde)
 }
 
 
-FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev) {
+FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev) 
+{
   unsigned int events = 0;
-  if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) {
+  if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) 
     events |= kFdeRead;
-  }
-  if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) {
+  if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) 
     events |= kFdeWrite;
-  }
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
     if (epev.events & EPOLLERR)
         throw std::exception();
@@ -55,9 +54,7 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev) {
 EpollAdm::EpollAdm():epfd_(epoll_create1(0)) 
 {
     if (epfd_ == -1) 
-    {
-            throw std::runtime_error("Failed to create epoll file descriptor");
-    }
+      throw std::runtime_error("Failed to create epoll file descriptor");
 }
 
 void EpollAdm::register_event(FdEvent *fde) 
@@ -152,13 +149,13 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
         // FdandEventの作成と追加
         FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
-        fde->last_active =GetNowTime();
+        fde->last_active = GetNowTime();
     }
     return fdee_vec;
 }
 
 
-void EpollAdm::Modify(FdEvent *fde, unsigned int events)
+void EpollAdm::GotoNextEvent(FdEvent *fde, unsigned int events)
 {
     // 現在の状態を取得
     unsigned int previous_state = fde->state;
@@ -169,9 +166,8 @@ void EpollAdm::Modify(FdEvent *fde, unsigned int events)
     // 前回の状態と同じ場合、何も変更する必要はない
     if ((fde->state % kFdeTimeout) == (previous_state % kFdeTimeout))
         return; // 変更がないためリターン
-    // epoll_event を計算
     epoll_event epev = MakeEpollEvent(fde);
     // epoll_ctl を使ってイベントを変更
     if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) 
-        throw std::runtime_error("Epoll Modify Error: epoll_ctl failed");
+        throw std::runtime_error("Epoll GotoNextEvent Error: epoll_ctl failed");
 }

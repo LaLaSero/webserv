@@ -63,7 +63,7 @@ class EpollAdm
     void Add(FdEvent *fde, unsigned int events);
     std::vector<FdandEvent> RetrieveTimeouts();
     std::vector<FdandEvent> CheckEvents(int timeout_ms);
-    void Modify(FdEvent *fde, unsigned int events);
+    void GotoNextEvent(FdEvent *fde, unsigned int events);
 	private:
     const int epfd_;
     std::map<int, FdEvent *> registered_fd_events_;
