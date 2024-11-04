@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:36:58 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/04 12:38:32 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/04 17:43:13 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,14 +139,16 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         // ここでリクエストに応じたレスポンスを作成
 
         // 書き込みイベントを登録する
-        // client_sock->SetResponse(response);  // クライアントソケットにレスポンスを保存
-        epoll->Modify(fde, kFdeWrite);       // 書き込み準備ができたら書き込みイベントを監視
+        client_sock->SetResponse(client_sock->GetResponse() + request); // クライアントソケットにレスポンスを保存
+        if (request == "keep\r\n")
+          std::cout << "ok keep alive" << std::endl;
+        else
+          epoll->Modify(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
     }
-
     // 書き込みイベントの処理
     if (events & kFdeWrite) 
     {
-        const std::string &response = "It is Response";
+        const std::string &response = "It is Fake Reponse\nwe get this:\n" + client_sock->GetResponse();
         ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
         if (nwritten == -1) 
         {

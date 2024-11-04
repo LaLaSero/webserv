@@ -103,7 +103,7 @@ void EpollAdm::Set(FdEvent *fde, unsigned int events) {
     return;
   epoll_event epev = MakeEpollEvent(fde);
   if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0)
-        throw std::runtime_error("Epoll Set Error");
+        throw std::runtime_error("Epoll Set Error:epoll_ctl failed");
 }
 
 void EpollAdm::Add(FdEvent *fde, unsigned int events) {
