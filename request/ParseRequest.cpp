@@ -1,9 +1,9 @@
 #include "ParseRequest.hpp"
 #include "../server/ServerException.hpp"
-#include "./parse_stage/RequestLineState.hpp"
-#include "./parse_stage/HeadersState.hpp"
-#include "./parse_stage/BodyState.hpp"
-#include "./parse_stage/FinishState.hpp"
+#include "./parse_state/RequestLineState.hpp"
+#include "./parse_state/HeadersState.hpp"
+#include "./parse_state/BodyState.hpp"
+#include "./parse_state/FinishState.hpp"
 #include <cstdlib>
 
 ParseRequest::ParseRequest(HTTPRequest &request): _request(request), _isChunked(false), _contentLength(0),
