@@ -3,14 +3,9 @@
 
 int main()
 {
-	std::map<std::string, std::string> env_vars;
-	env_vars["REQUEST_METHOD"] = "GET";
-	env_vars["QUERY_STRING"] = "name=Testuser";
-	env_vars["SCRIPT_NAME"] = "./cgitest.py"; 
-	env_vars["CONTENT_TYPE"] = "dummy";
-	env_vars["CONTENT_LENGTH"] = "10";
-
-	CgiHandler cgi_handler(env_vars.at("SCRIPT_NAME"), env_vars);
+	HTTPRequest request;
+	
+	CgiHandler cgi_handler(request);
 
 	std::string response = cgi_handler.ExecuteCGI();
 

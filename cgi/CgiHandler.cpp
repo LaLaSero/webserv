@@ -1,23 +1,26 @@
 #include "CgiHandler.hpp"
 
-CgiHandler::CgiHandler(const std::string &script_path, const std::map<std::string, std::string> &env_vars)
-	: script_path_(script_path), env_vars_(env_vars), request_method_(env_vars.at("REQUEST_METHOD")), request_body_("") {}
-
-void CgiHandler::setScriptPath(const std::string &script_path)
+CgiHandler::CgiHandler(HTTPRequest &request) : request_(request)
 {
-	script_path_ = script_path;
-}
-
-void CgiHandler::setRequestMethod(const std::string &method)
-{
-	request_method_ = method;
-	this->env_vars_["REQUEST_METHOD"] = method;
+	env_vars_["REQUEST_METHOD"] = request_.getMethod();
+	env_vars_["QUERY_STRING"] = request_.getQuery();
+	env_vars_["SCRIPT_NAME"] = request_.getUri(); 
+	env_vars_["CONTENT_TYPE"] = "test";
+	env_vars_["CONTENT_LENGTH"] = request_.getBody().size();
+	env_vars_["PATH_INFO"] = request_.getUri();
+	env_vars_["REQUEST_URI"] = request_.getUri() + request_.getQuery();
+	env_vars_["SERVER_PROTOCOL"] = request_.getVersion();
+	env_vars_["SERVER_SOFTWARE"] = "42_WebServ";
+	env_vars_["SERVER_NAME"] = request_.getHost();
+	env_vars_["GATEWAY_INTERFACE"] = "CGI/1.1";
+	env_vars_["REMOTE_ADDR"] = "IP of the client";
+	env_vars_["SERVER_PORT"] = request_.getPort();
+	request_body_ = request_.getBody();
 }
 
 void CgiHandler::setRequestBody(const std::string &body)
 {
 	request_body_ = body;
-	this->env_vars_["CONTENT_LENGTH"] = body.size();
 }
 
 std::string CgiHandler::ExecuteCGI()
@@ -55,8 +58,9 @@ std::string CgiHandler::ExecuteCGI()
 		}
 		envp.push_back(NULL);
 
-		char *argv[] = {const_cast<char *>(script_path_.c_str()), NULL};
-		execve(script_path_.c_str(), argv, &(envp[0]));
+		std::string script_path = env_vars_["SCRIPT_NAME"];
+		char *argv[] = {const_cast<char *>(script_path.c_str()), NULL};
+		execve(script_path.c_str(), argv, &(envp[0]));
 
 		perror("execve");
 		for (size_t i = 0; i < envp.size(); ++i)

@@ -12,19 +12,17 @@
 #include <sstream>
 #include <cstdlib>
 #include <cstdio>
+#include "../request/HTTPRequest.hpp"
 
 class CgiHandler
 {
 private:
-	std::string script_path_;
 	std::map<std::string, std::string> env_vars_;
-	std::string request_method_;
 	std::string request_body_;
+	HTTPRequest &request_;
 
 public:
-	CgiHandler(const std::string &scriptPath, const std::map<std::string, std::string> &envVars);
-	void setScriptPath(const std::string &scriptPath);
-	void setRequestMethod(const std::string &method);
+	CgiHandler(HTTPRequest &request);
 	void setRequestBody(const std::string &body);
 	std::string ExecuteCGI();
 	std::string ParseCGIresponse(const std::string &rawResponse);

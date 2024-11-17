@@ -3,10 +3,12 @@
 NAME=cgitest
 CXX=c++
 CXXFLAGS=-std=c++98 -Wall -Wextra -Werror
-SRC=CgiHandler.cpp cgitest_main.cpp
+SRC=CgiHandler.cpp cgitest_main.cpp ../request/HTTPRequest.cpp
 OBJ=$(SRC:.cpp=.o)
 
 test: re
+	clear
+	@echo "----CGI_TEST----"
 	./$(NAME)
 
 all: $(NAME)
