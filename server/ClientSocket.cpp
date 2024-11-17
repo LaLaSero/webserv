@@ -12,18 +12,21 @@
 
 #include"ClientSocket.hpp"
 
-
-void ClientSocket::SetResponse(const std::string& resp)
-{
-    response_ = resp;
-}
-
 const std::string ClientSocket::GetResponse(void) const
 {
   return (response_);
 }
 
+void ClientSocket::SetResponse(std::string res)
+{
+  response_ = res;
+}
+
 ClientSocket::ClientSocket(int client_fd, SocketAddress client_address, const Config &conf): Socket(client_fd, client_address, conf) 
 {
-    std::cout << "ClientSocket created with fd: " << client_fd << std::endl;
 }
+ClientSocket::ClientSocket(int fd, const SocketAddress &server_addr,
+                       const SocketAddress &client_addr,
+                       const Config &config) : Socket(fd, server_addr, config),
+      client_addr_(client_addr),
+      is_shutdown_(false) {}

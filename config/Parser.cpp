@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:43 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/03 20:30:28 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,10 @@ void Parser::ValidIp(std::string &ip)
     std::string part;
     std::istringstream ss(ip);
 
-    while (std::getline(ss, part, '.')) {
+    while (std::getline(ss, part, '.')) 
+	{
         parts.push_back(part);
     }
-
     if (parts.size() != 4) {
         std::cerr << ip << " is invalid: should contain 4 parts." << std::endl;
 		throw std::exception();
@@ -75,7 +75,7 @@ void Parser::ValidIp(std::string &ip)
         int num = std::atoi(it->c_str());
         if (num < 0 || num > 255) 
 		{
-            std::cout << ip << " is invalid: each part should be between 0 and 255." << std::endl;
+            std::cerr << ip << " is invalid: each part should be between 0 and 255." << std::endl;
 			throw std::exception();
         }
     }
@@ -124,7 +124,6 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 void Parser::ValidChildServerName(const std::string& str) {
     if (str.empty()) 
 	    throw std::runtime_error("error empty:" + str);
-
     if (str.front() == '.' || str.back() == '.') 
 		throw std::runtime_error("error dot in edge:" + str);
     for (size_t i = 0; i < str.length(); ++i)
@@ -186,10 +185,11 @@ void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 		body = body.substr(body.find(' ') + 1, body.size());
 	}
 	std::string page;
-	page = body.substr(0,body.size() - 1);
+	page = body.substr(0);
+	page.pop_back();
 	if (status_vec.empty())
 		throw std::runtime_error("ParseErrorpage status empty");
-	int i;
+	unsigned long i;
 	i = 0;
 	while (i < status_vec.size())
 	{
@@ -238,6 +238,14 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 	loc.setRedirection(pair);
 }
 
+static std::string EmitEmpty(std::string &original)
+{
+	size_t i =0;
+	while(original[i] ==' ')
+		i++;
+	return (original.substr(i));
+}
+
 
 void Parser::ParseLocation(ChildServer &server, std::string &line)
 {
@@ -249,10 +257,14 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 	std::string red;
 	if (!std::getline(content_, red))
 		throw std::runtime_error("ParseLocation Error:'{}' is not found ");
+	red = EmitEmpty(red);
 	if (red != "{")
 		throw std::runtime_error("ParseLocation Error:'{' is not found" + red);
-	while (std::getline(content_, red) && red !=  "}")
+	while (std::getline(content_, red))
 	{
+		red = EmitEmpty(red);
+		if (red == "}")
+			break ;
 		std::string tmp;
 		if (check_syntax(red, "root ",true))
 		{
@@ -290,15 +302,14 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 			tmp.erase(tmp.size() - 1);
 			if (tmp.size() > 7)
 				throw  std::runtime_error("ParseLocation Error:';' too large client_max " + red);
-			std::stringstream ss(tmp);
 			size_t i;
-			ss >> i;
+			i = max_stos(tmp);
 			loc.setClientMaxBodySize(i);
 		}
+		else
+			throw std::runtime_error("ParseLocation Error:unkown word is found");
 		// we have to add cgi infomation;
 		// else if ()
-		else
-			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
@@ -314,6 +325,7 @@ void Parser::MakeChildServer(Config &conf)
 		throw std::exception();
 	while(std::getline(content_, line) && line !=  "}")
 	{
+		line = EmitEmpty(line);
 		if (check_syntax(line, "listen ",true))
 			ParseListen(serv, line);
 		else if (check_syntax(line, "server_name ", true))
