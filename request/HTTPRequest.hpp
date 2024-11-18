@@ -20,6 +20,8 @@ class HTTPRequest
 		std::string _body;
 		std::string _location;
 
+		int _mode;
+
 
 	public:
 		HTTPRequest();
@@ -48,6 +50,9 @@ class HTTPRequest
 
 		const std::string& getLocation() const;
 		void setLocation(const std::string& location);
+
+		int getMode() const;
+		void setMode(int mode);
 
 		const std::map<std::string, std::string>& getHeaders() const;
 		void setHeaders(const std::pair<std::string, std::string>& header);

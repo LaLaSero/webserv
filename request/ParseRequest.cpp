@@ -1,9 +1,9 @@
 #include "ParseRequest.hpp"
 #include "../server/ServerException.hpp"
-#include "./parse_stage/RequestLineState.hpp"
-#include "./parse_stage/HeadersState.hpp"
-#include "./parse_stage/BodyState.hpp"
-#include "./parse_stage/FinishState.hpp"
+#include "./parse_state/RequestLineState.hpp"
+#include "./parse_state/HeadersState.hpp"
+#include "./parse_state/BodyState.hpp"
+#include "./parse_state/FinishState.hpp"
 #include <cstdlib>
 
 ParseRequest::ParseRequest(HTTPRequest &request): _request(request), _isChunked(false), _contentLength(0),
@@ -39,14 +39,16 @@ void ParseRequest::parse(char *buffer)
 {
 	std::stringstream bufferStream(buffer);
 
-	while (_currentState) {
+	while (_currentState)
+	{
 		IParseState* nextState = _currentState->handle(*this, bufferStream);
-		if (nextState != _currentState) {
+		if (nextState != _currentState)
+		{
 			delete _currentState;
 			_currentState = nextState;
-		} else {
-			break;
 		}
+		else
+			break;
 	}
 }
 
@@ -83,7 +85,7 @@ bool ParseRequest::readRequestLine(std::stringstream &ss)
 bool ParseRequest::readHeaders(std::stringstream &ss)
 {
 	std::string line;
-	if (getlineWithCRLF(ss, line))
+	while (getlineWithCRLF(ss, line))
 	{
 		if (line.empty())
 			return true;
@@ -128,51 +130,29 @@ bool ParseRequest::readHeaders(std::stringstream &ss)
 
 		if (!_request.getHeader("Transfer-Encoding").empty() && !_request.getHeader("Content-Length").empty())
 			throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-
-		return true;
-	} else {
-		return false;
 	}
+	return false;
 }
 
 bool ParseRequest::readBody(std::stringstream &ss)
 {
 	if (_isChunked) {
-		std::string line;
-		while (getlineWithCRLF(ss, line)) {
-			if (!_isChunkSizeExpected) {
-				if (line.empty()) {
-					return false;
-				}
-				if (!isHex(line)) {
-					throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-				}
-				_chunkSize = ft_stoi(line);
-				if (_chunkSize == 0) {
-					return true;
-				}
-				_isChunkSizeExpected = true;
-			} else {
-				if (line.size() != _chunkSize) {
-					throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-				}
-				_request.addBody(line);
-				_isChunkSizeExpected = false;
-			}
-		}
 		return false;
 	} else {
-		std::string line;
-		while (getlineWithCRLF(ss, line)) {
-			if (line.empty())
-				break;
-			_request.addBody(line);
-			if (_request.getBody().size() > _contentLength)
-				throw ServerException(HTTP_PAYLOAD_TOO_LARGE, "Request Entity Too Large");
-			if (_request.getBody().size() == _contentLength)
-				break;
-		}
-		if (_request.getBody().size() == _contentLength)
+		std::streamsize remaining = _contentLength - _request.getBody().size();
+		if (remaining <= 0)
+			return true;
+
+		std::string bodyPart;
+		bodyPart.resize(remaining);
+
+		ss.read(&bodyPart[0], remaining);
+		std::streamsize bytesRead = ss.gcount();
+		bodyPart.resize(bytesRead);
+
+		_request.addBody(bodyPart);
+
+		if (_request.getBody().size() == static_cast<size_t>(_contentLength))
 			return true;
 		else
 			return false;
@@ -264,4 +244,14 @@ int ParseRequest::ft_stoi(const std::string& str)
 
 bool ParseRequest::ft_isdigit(char c) {
 	return std::isdigit(static_cast<unsigned char>(c));
+}
+
+bool ParseRequest::isFinished() const
+{
+	return _isFinished;
+}
+
+void ParseRequest::setFinished(bool finished)
+{
+	_isFinished = finished;
 }
