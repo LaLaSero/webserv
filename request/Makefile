@@ -1,6 +1,9 @@
 SRC = main.cpp\
 	HTTPRequest.cpp\
 	HTTPResponse.cpp\
+	HTTPResponseGET.cpp\
+	HTTPResponsePOST.cpp\
+	HTTPResponseDELETE.cpp\
 	HTTPStatusMessage.cpp\
 	ParseRequest.cpp\
 	./parse_state/BodyState.cpp\

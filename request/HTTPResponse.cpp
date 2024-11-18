@@ -21,6 +21,18 @@ void HTTPResponse::clear()
 	_body.clear();
 }
 
+std::string HTTPResponse::getCurrentTime()
+{
+	std::time_t now = std::time(0);
+	std::tm* now_tm = std::gmtime(&now);
+
+	char buffer[80];
+	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", now_tm);
+
+	return std::string(buffer);
+}
+
+
 void HTTPResponse::setStatusMessage(const std::string& statusMessage)
 {
 	_statusMessage = statusMessage;
@@ -44,8 +56,9 @@ void HTTPResponse::makeMessage()
 		setHeader("Connection", "keep-alive");
 	else
 		setHeader("Connection", "close");
-	setHeader("Date", "Sun, 18 Oct 2009 08:56:53 GMT");
-	setHeader("Server", "Apache/2.2.14 (Win32)");
+	setHeader("Date", getCurrentTime());
+	setHeader("Server", SERVER_NAME);
+	setHeader("Content-Type", "text/html");
 	setHeader("Content-Length", std::to_string(_body.size()));
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 		message += it->first + ": " + it->second + "\r\n";
@@ -53,25 +66,6 @@ void HTTPResponse::makeMessage()
 	if (_body.size() > 0)
 		message += _body + "\r\n";
 }
-
-void HTTPResponse::makeBodyGET(HTTPRequest& request)
-{
-	(void)request;
-	_body = "<html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>GET request received!</p></body></html>";
-}
-
-void HTTPResponse::makeBodyPOST(HTTPRequest& request)
-{
-	(void)request;
-	_body = "<html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>POST request received!</p></body></html>";
-}
-
-void HTTPResponse::makeBodyDELETE(HTTPRequest& request)
-{
-	(void)request;
-	_body = "<html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>DELETE request received!</p></body></html>";
-}
-
 
 void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 {
@@ -95,7 +89,7 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	{
 		// 未対応のメソッド
 		std::cerr << "Unsupported method: " << method << std::endl;
-		std::exit(1);
+		_statusCode = STATUS_501;
 	}
 	makeMessage();
 	_keepAlive = request.getHeader("Connection") == "keep-alive";
