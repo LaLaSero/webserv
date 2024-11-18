@@ -1,10 +1,12 @@
 SRC = main.cpp\
 	HTTPRequest.cpp\
+	HTTPResponse.cpp\
+	HTTPStatusMessage.cpp\
 	ParseRequest.cpp\
 	./parse_state/BodyState.cpp\
 	./parse_state/FinishState.cpp\
 	./parse_state/HeadersState.cpp\
-	./parse_state/RequestLineState.cpp\
+	./parse_state/RequestLineState.cpp
 
 OBJ = $(SRC:.cpp=.o)
 CXX = c++

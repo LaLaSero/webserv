@@ -3,6 +3,7 @@
 
 #include <string>
 #include "HTTPRequest.hpp"
+#include "HTTPStatusCode.hpp"
 
 class HTTPResponse
 {
@@ -11,20 +12,40 @@ class HTTPResponse
 		~HTTPResponse();
 		
 		void clear();
+		void setStatusMessage(const std::string& statusMessage);
+
+		void setHeader(const std::string& key, const std::string& value);
+
+		void setStatusline();
+
+		void makeMessage();
+
+		// void selectResponseMode(HTTPRequest& request);
+		void setStatusMessageMap(void);
+	
+		void handleNormalRequest(HTTPRequest& request);
+
+		void makeBodyGET(HTTPRequest& request);
+		void makeBodyPOST(HTTPRequest& request);
+		void makeBodyDELETE(HTTPRequest& request);
+		
+
+
 
 	private:
 		std::string _version;
-		// HTTPStatusCode _statusCode;
 		std::string _statusMessage;
 		std::string _statusLine;
 		bool _keepAlive;
 		size_t _contentLength;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
-		std::string _statusMessage;
+		HTTPStatusCode _statusCode;
 
+		std::map<HTTPStatusCode, std::string> _statusMessageMap;
 
-		bool _keepAlive;
+		std::string message;
+
 
 };
 
