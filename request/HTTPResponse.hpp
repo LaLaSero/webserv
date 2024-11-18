@@ -11,6 +11,10 @@
 #define SERVER_NAME "webserv"
 #endif
 
+#define NORMAL_RESPONSE 0
+#define REDIRECT_RESPONSE 1
+#define CGI_RESPONSE 2
+
 
 class HTTPResponse
 {
@@ -36,9 +40,12 @@ class HTTPResponse
 		void makeBodyGET(HTTPRequest& request);
 		void makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
-		
 
+		bool isGCIRequest(HTTPRequest& request);
+		void handleCGIRequest(HTTPRequest& request);
 
+		bool isRedirectRequest(HTTPRequest& request);
+		void handleRedirectRequest(HTTPRequest& request);
 
 	private:
 		std::string _version;

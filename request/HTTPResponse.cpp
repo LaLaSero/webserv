@@ -96,3 +96,58 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	std::cout << message << std::endl;
 
 }
+
+bool HTTPResponse::isGCIRequest(HTTPRequest& request)
+{
+	std::string uri = request.getUri();
+	if (uri.find("/cgi-bin/") == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool HTTPResponse::isRedirectRequest(HTTPRequest& request)
+{
+	std::string uri = request.getUri();
+	if (uri.find("/redirect/") == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+void HTTPResponse::handleCGIRequest(HTTPRequest& request)
+{
+	(void)request;
+	// CGIの処理
+}
+
+void HTTPResponse::handleRedirectRequest(HTTPRequest& request)
+{
+	(void)request;
+	// リダイレクトの処理
+}
+
+// CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
+void HTTPResponse::selectResponseMode(HTTPRequest& request)
+{
+	std::string uri = request.getUri();
+
+	if (isGCIRequest(request))
+	{
+		request.setMode(CGI_RESPONSE);
+		handleCGIRequest(request);
+	}
+	else if (isRedirectRequest(request))
+	{
+		request.setMode(REDIRECT_RESPONSE);
+		handleRedirectRequest(request);
+	}
+	else
+	{
+		request.setMode(NORMAL_RESPONSE);
+		handleNormalRequest(request);
+	}
+
+}

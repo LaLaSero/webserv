@@ -7,7 +7,7 @@
 
 int main()
 {
-	char buffer[] = "POST /submit-form HTTP/1.1\r\nHost: example.com\r\nContent-Length: 11\r\nUser-Agent: TestAgent/1.0\r\n\r\nHello World";
+	char buffer[] = "POST /index.html HTTP/1.1\r\nHost: example.com\r\nContent-Length: 11\r\nUser-Agent: TestAgent/1.0\r\n\r\nHello World";
 
 	HTTPRequest request;
 	ParseRequest parser(request);
