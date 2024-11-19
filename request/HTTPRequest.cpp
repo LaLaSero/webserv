@@ -1,7 +1,7 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest()
-	: _method(""), _uri(""), _version(""), _path(""), _query(""), _host(""), _port("80"), _body(""), _location(""), _mode(0)
+	: _method(""), _uri(""), _version(""), _path(""), _query(""), _host(""), _port("80"), _body(""), _location(), _mode(0)
 {
 }
 
@@ -88,12 +88,14 @@ void HTTPRequest::setPort(const std::string& port)
 	_port = port;
 }
 
-void HTTPRequest::setLocation(const std::string& location)
+void HTTPRequest::setLocation(const std::string& path)
 {
+	Location location;
+	location.setPath(path);
 	_location = location;
 }
 
-const std::string& HTTPRequest::getLocation() const
+const Location& HTTPRequest::getLocation() const
 {
 	return _location;
 }

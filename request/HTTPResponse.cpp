@@ -1,4 +1,6 @@
 #include "HTTPResponse.hpp"
+#include "../server/ServerException.hpp"
+#include "../config/Location.hpp"
 
 HTTPResponse::HTTPResponse()
 	: _version("HTTP/1.1")
@@ -19,6 +21,7 @@ void HTTPResponse::clear()
 	_headers.clear();
 	_keepAlive = true;
 	_body.clear();
+	message.clear();
 }
 
 std::string HTTPResponse::getCurrentTime()
@@ -30,6 +33,16 @@ std::string HTTPResponse::getCurrentTime()
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", now_tm);
 
 	return std::string(buffer);
+}
+
+void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::string& reasonPhrase, const std::string& message)
+{
+	_statusCode = statusCode;
+	_statusMessage = reasonPhrase;
+	_body = "<html><head><title>" + std::to_string(statusCode) + " " + reasonPhrase + "</title></head>"
+			"<body><h1>" + std::to_string(statusCode) + " " + reasonPhrase + "</h1>"
+			"<p>" + message + "</p></body></html>";
+	makeMessage();
 }
 
 
@@ -87,9 +100,8 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	}
 	else
 	{
-		// 未対応のメソッド
-		std::cerr << "Unsupported method: " << method << std::endl;
 		_statusCode = STATUS_501;
+		_body = "<html><head><title>501 Not Implemented</title></head><body><h1>501 Not Implemented</h1><p>Method Not Implemented</p></body></html>";
 	}
 	makeMessage();
 	_keepAlive = request.getHeader("Connection") == "keep-alive";
@@ -97,7 +109,7 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 
 }
 
-bool HTTPResponse::isGCIRequest(HTTPRequest& request)
+bool HTTPResponse::isCGIRequest(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 	if (uri.find("/cgi-bin/") == 0)
@@ -117,16 +129,143 @@ bool HTTPResponse::isRedirectRequest(HTTPRequest& request)
 	return false;
 }
 
+bool HTTPResponse::isAutoIndex(HTTPRequest& request)
+{
+	(void)request;
+	// serverConfigでautoIndexが有効になっているかどうか
+	return false;
+}
+
 void HTTPResponse::handleCGIRequest(HTTPRequest& request)
 {
 	(void)request;
+	// Location location;
+	// location = request.getLocation();
 	// CGIの処理
 }
 
 void HTTPResponse::handleRedirectRequest(HTTPRequest& request)
 {
 	(void)request;
+	// Location location;
 	// リダイレクトの処理
+}
+
+void HTTPResponse::makeBodyAutoIndex(std::string files, std::string uri, std::stringstream& ss)
+{
+	// Location location;
+	// 自動インデックスの処理
+}
+
+bool HTTPResponse::isDirectoryRequest(HTTPRequest& request)
+{
+	// (void)request;
+	// リクエストされたURIがディレクトリかどうか
+	return false;
+}
+
+bool HTTPResponse::hasTrailingSlash(const std::string& uri) const
+{
+	return !uri.empty() && uri.back() == '/';
+}
+
+void HTTPResponse::redirectToTrailingSlash(const HTTPRequest& request)
+{
+	std::string uri = request.getUri();
+	if (uri.back() != '/') {
+		uri += "/";
+	}
+	_statusCode = STATUS_301;
+	_headers["Location"] = uri;
+	_body = "<html><head><title>301 Moved Permanently</title></head>"
+			"<body><h1>301 Moved Permanently</h1>"
+			"<p>Redirecting to " + uri + "</p></body></html>";
+	makeMessage();
+	std::cout << message << std::endl;
+}
+
+
+bool HTTPResponse::indexFileExist(HTTPRequest& request)
+{
+	(void)request;
+	// indexファイルが存在するかどうか
+	return false;
+}
+
+bool HTTPResponse::isAutoIndexEnabled(HTTPRequest& request)
+{
+	(void)request;
+	// serverConfigでautoIndexが有効になっているかどうか
+	return false;
+}
+
+std::vector<std::string> HTTPResponse::readDirectoryContents(std::string path)
+{
+	(void)path;
+	std::vector<std::string> fileList;
+	// ディレクトリの中身を取得
+	return fileList;
+}
+
+std::string HTTPResponse::generateAutoIndexHTML(std::vector<std::string> fileList, std::string uri)
+{
+	(void)fileList;
+	(void)uri;
+	std::string htmlContent;
+	// 自動インデックスのHTMLを生成
+	return htmlContent;
+}
+
+void HTTPResponse::serveAutoIndex(std::string htmlContent, HTTPRequest& request)
+{
+	(void)htmlContent;
+	(void)request;
+	// 自動インデックスのレスポンスを返す
+}
+
+std::string HTTPResponse::mapUriToPath(std::string uri)
+{
+	(void)uri;
+	std::string path;
+	// URIをファイルパスに変換
+	return path;
+}
+
+void HTTPResponse::handleAutoIndex(HTTPRequest& request)
+{
+	std::string uri = request.getUri();
+	std::string path = mapUriToPath(uri);
+	if(!isDirectoryRequest(request))
+	{
+		// normalリクエストに飛ばす
+		handleNormalRequest(request);
+		return ;
+	}
+	if (!hasTrailingSlash(uri))
+	{
+		redirectToTrailingSlash(request);
+		return ;
+	}
+	if (indexFileExist(request))
+	{
+		handleNormalRequest(request);
+		return ;
+	}
+	 if (!isAutoIndexEnabled(request))
+	{
+		_statusCode = STATUS_403;
+		_body = "<html><head><title>403 Forbidden</title></head>"
+				"<body><h1>403 Forbidden</h1><p>Directory listing is forbidden.</p></body></html>";
+		makeMessage();
+		std::cout << message << std::endl;
+		return ;
+	}
+
+	// 自動インデックスの処理
+	std::vector<std::string> fileList = readDirectoryContents(path);
+	std::string htmlContent = generateAutoIndexHTML(fileList, uri);
+	serveAutoIndex(htmlContent, request);
+
 }
 
 // CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
@@ -134,7 +273,7 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 
-	if (isGCIRequest(request))
+	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
 		handleCGIRequest(request);
@@ -147,7 +286,15 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 	else
 	{
 		request.setMode(NORMAL_RESPONSE);
-		handleNormalRequest(request);
+		if (isAutoIndex(request))
+		{
+			// 自動インデックスの処理
+			handleAutoIndex(request);
+		}
+		else
+		{
+			handleNormalRequest(request);
+		}
 	}
 
 }

@@ -32,6 +32,8 @@ class HTTPResponse
 
 		void makeMessage();
 
+		void generateErrorResponse(HTTPStatusCode statusCode, const std::string& reasonPhrase, const std::string& message);
+
 		void selectResponseMode(HTTPRequest& request);
 		void setStatusMessageMap(void);
 	
@@ -41,26 +43,41 @@ class HTTPResponse
 		void makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
 
-		bool isGCIRequest(HTTPRequest& request);
+		bool isCGIRequest(HTTPRequest& request);
 		void handleCGIRequest(HTTPRequest& request);
 
 		bool isRedirectRequest(HTTPRequest& request);
 		void handleRedirectRequest(HTTPRequest& request);
 
+		bool isAutoIndex(HTTPRequest& request);
+		void handleAutoIndex(HTTPRequest& request);
+		void makeBodyAutoIndex(std::string files, std::string uri, std::stringstream& ss);
+
+		bool isDirectoryRequest(HTTPRequest& request);
+		bool hasTrailingSlash(const std::string& uri) const;
+		void redirectToTrailingSlash(const HTTPRequest& request);
+
+		bool indexFileExist(HTTPRequest& request);
+		bool isAutoIndexEnabled(HTTPRequest& request);
+
+		std::vector<std::string> readDirectoryContents(std::string path);
+		std::string generateAutoIndexHTML(std::vector<std::string> fileList, std::string uri);
+		void serveAutoIndex(std::string htmlContent, HTTPRequest& request);
+		std::string mapUriToPath(std::string uri);
+
 	private:
-		std::string _version;
-		std::string _statusMessage;
-		std::string _statusLine;
-		bool _keepAlive;
-		size_t _contentLength;
-		std::map<std::string, std::string> _headers;
-		std::string _body;
-		HTTPStatusCode _statusCode;
+		std::string		_version;
+		std::string		_statusMessage;
+		std::string		_statusLine;
+		bool			_keepAlive;
+		size_t			_contentLength;
+		std::string		_body;
+		std::string		message;
 
-		std::map<HTTPStatusCode, std::string> _statusMessageMap;
+		HTTPStatusCode	_statusCode;
 
-		std::string message;
-
+		std::map<std::string, std::string> 		_headers;
+		std::map<HTTPStatusCode, std::string>	_statusMessageMap;
 
 };
 
