@@ -5,6 +5,10 @@ SRC = main.cpp\
 	HTTPResponsePOST.cpp\
 	HTTPResponseDELETE.cpp\
 	HTTPStatusMessage.cpp\
+	HandleNormalRequest.cpp\
+	HandleAutoIndexRequest.cpp\
+	HandleCGIRequest.cpp\
+	HandleRedirectRequest.cpp\
 	ParseRequest.cpp\
 	./parse_state/BodyState.cpp\
 	./parse_state/FinishState.cpp\
