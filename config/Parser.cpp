@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 20:30:28 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/19 09:55:07 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,17 @@ Parser& Parser::operator=(const Parser& other)
 
 void Parser::LoadFile(const std::string& file_path)
 {
-    std::ifstream ifs(file_path);
-    if (!ifs) 
+    // std::ifstreamのオープン
+    std::ifstream ifs(file_path.c_str());
+    if (!ifs) {
         throw std::runtime_error("Failed to open file: " + file_path);
+    }
 
+    // ストリームに内容を読み込む
     std::stringstream ss;
     ss << ifs.rdbuf();
+
+    // 文字列ストリームの内容をcontent_にセット
     content_.str(ss.str());
 }
 
@@ -107,13 +112,13 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 	{
     	ip = listen_info.substr(0, listen_info.find(":"));
 		port = listen_info.substr(listen_info.find(":") + 1);
-		port.pop_back();
+		port.erase(port.size() - 1);
  	} 
 	else 
 	{
     	ip = kAnyIpAddress;
 		port = listen_info;
-		port.pop_back();
+		port.erase(port.size() - 1);
 	}
 	ValidIp(ip);
 	ValidPort(port);
@@ -124,7 +129,7 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 void Parser::ValidChildServerName(const std::string& str) {
     if (str.empty()) 
 	    throw std::runtime_error("error empty:" + str);
-    if (str.front() == '.' || str.back() == '.') 
+    if (str[0] == '.' || str[str.size() - 1] == '.') 
 		throw std::runtime_error("error dot in edge:" + str);
     for (size_t i = 0; i < str.length(); ++i)
 	{
@@ -186,7 +191,7 @@ void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 	}
 	std::string page;
 	page = body.substr(0);
-	page.pop_back();
+	page.erase(page.size() - 1);
 	if (status_vec.empty())
 		throw std::runtime_error("ParseErrorpage status empty");
 	unsigned long i;
@@ -221,7 +226,7 @@ void Parser::ParseCLMAX(ChildServer &serv, std::string &line)
 {
 	std::string limit;
 	limit = line.substr(line.find(' ')+ 1);
-	limit.pop_back();
+	limit.erase(limit.size() - 1);;
 	serv.set_request_max(max_stos(limit));
 }
 
@@ -233,7 +238,7 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 	line = line.substr(line.find(' ')+ 1);
 	original = line.substr(0, line.find(' '));
 	late = line.substr(line.find(' ') + 1);
-	late.pop_back();
+	late.erase(late.size() - 1);;
 	std::pair<std::string, std::string> pair(original, late);
 	loc.setRedirection(pair);
 }
