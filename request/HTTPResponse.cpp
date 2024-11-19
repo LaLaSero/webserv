@@ -2,8 +2,9 @@
 #include "../server/ServerException.hpp"
 #include "../config/Location.hpp"
 
-HTTPResponse::HTTPResponse()
-	: _version("HTTP/1.1")
+HTTPResponse::HTTPResponse(const Config& _config)
+	: _config(_config)
+	, _version("HTTP/1.1")
 	, _keepAlive(true)
 	, _body("")
 	, _statusCode(STATUS_200)
@@ -102,10 +103,35 @@ bool HTTPResponse::isRedirectRequest(HTTPRequest& request)
 
 bool HTTPResponse::isAutoIndex(HTTPRequest& request)
 {
-	(void)request;
-	// serverConfigでautoIndexが有効になっているかどうか
+	// リクエストのURIを取得
+	std::string uri = request.getUri();
+
+	// ConfigからChildServerを取得
+	const std::vector<ChildServer>& servers = _config.getchildserver();
+
+	// 範囲ベースのforループをイテレータに置き換え
+	std::vector<ChildServer>::const_iterator serverIt;
+	for (serverIt = servers.begin(); serverIt != servers.end(); ++serverIt)
+	{
+		// 各サーバー内のLocationを探索
+		const std::vector<Location>& locations = serverIt->getLocations();
+
+		std::vector<Location>::const_iterator locationIt;
+		for (locationIt = locations.begin(); locationIt != locations.end(); ++locationIt)
+		{
+			// URIがLocationのパスに一致するか確認
+			if (uri.find(locationIt->getPath()) == 0) // 完全一致でも良い場合、修正する
+			{
+				// autoIndexの設定を確認
+				return locationIt->isDirectoryListing();
+			}
+		}
+	}
+
+	// 一致するLocationが見つからなかった場合、falseを返す
 	return false;
 }
+
 
 // CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
 void HTTPResponse::selectResponseMode(HTTPRequest& request)
@@ -136,4 +162,12 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 		}
 	}
 
+}
+
+
+std::string HTTPResponse::intToString(int number) const
+{
+	std::stringstream ss;
+	ss << number;
+	return ss.str();
 }

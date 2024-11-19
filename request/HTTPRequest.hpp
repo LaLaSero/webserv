@@ -26,8 +26,6 @@ class HTTPRequest
 
 		int _mode;
 
-		// ChildServer _server;
-
 	public:
 		HTTPRequest();
 		~HTTPRequest();

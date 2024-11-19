@@ -6,6 +6,7 @@
 #include "HTTPStatusCode.hpp"
 #include <ctime>
 #include <cstdio>
+#include "../config/Config.hpp"
 
 #ifndef SERVER_NAME
 #define SERVER_NAME "webserv"
@@ -19,7 +20,7 @@
 class HTTPResponse
 {
 	public:
-		HTTPResponse();
+		HTTPResponse(const Config& _config);
 		~HTTPResponse();
 		
 		void clear();
@@ -65,6 +66,8 @@ class HTTPResponse
 		void serveAutoIndex(std::string htmlContent, HTTPRequest& request);
 		std::string mapUriToPath(std::string uri);
 
+		std::string intToString(int number) const;
+
 	private:
 		std::string		_version;
 		std::string		_statusMessage;
@@ -75,6 +78,8 @@ class HTTPResponse
 		std::string		message;
 
 		HTTPStatusCode	_statusCode;
+
+		const Config&	_config;
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;
