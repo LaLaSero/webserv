@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <cstdio>
+#include<sys/stat.h>
 #include<map>
 
 
@@ -191,23 +192,51 @@ void HTTPResponse::setHeadersContentType(std::string& true_path)
         _headers["Content-Type"] = "application/octet-stream";
 }
 
+static bool is_dir(const std::string &path)
+{
+	struct stat pathStat;
+	if (stat(path.c_str(), &pathStat) == 0)
+		return S_ISDIR(pathStat.st_mode);
+	else
+		return (false);
+}
+
+void process_dir()
+{
+
+}
+
 void HTTPResponse::makeBodyGET(HTTPRequest &request)
 {
+	// it is no config is too hard
+	// 
+	// if (check_location)
+	// {
+	// 	if (check_redirect())
+	// 	{	
+	// 		check_redirect();
+	// 		return ;
+	// 	} (redirect())
+	// }
+	// 
     std::string uri = request.get_Uri();
     std::string true_path = make_true_path(uri);
+ 	if (access(true_path.c_str(), F_OK) != 0)
+	{
+        _statusCode = STATUS_404;
+		_body = get_not_found_page();
+        _contentLength = _body.size();
+		return ;
+	}
+	if (is_dir(true_path))
+	{
+		process_dir();
+	}
     std::string body = get_file_content(true_path);
     if (body.empty())
     {
-        if (access(true_path.c_str(), F_OK) == 0)
-		{
-            _statusCode = STATUS_403;
-			_body = get_forbidden_page();
-		}
-        else
-		{
-            _statusCode = STATUS_404;
-			_body = get_not_found_page();
-		}
+        _statusCode = STATUS_403;
+		_body = get_forbidden_page();
         _contentLength = _body.size();
     }
     else
@@ -225,6 +254,7 @@ void HTTPResponse::makeBodyPOST(HTTPRequest &request)
     std::string uri = request.get_Uri();
     std::string true_path = make_true_path(uri);
 }
+
 
 bool deleteFile(const char* filename) 
 {
