@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/17 19:08:22 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/21 19:16:42 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,10 @@
 #include"../server/SocketAddress.hpp"
 #include"../server/ListenSocket.hpp"
 #include"../server/ClientSocket.hpp"
+
+#include"../request/HTTPResponse.hpp"
+#include"../request/HTTPRequest.hpp"
+#include"../request/ParseRequest.hpp"
 #include"functions.hpp"
 
 static void prepare_hints(struct addrinfo &hints, int type)
@@ -27,18 +31,21 @@ static void prepare_hints(struct addrinfo &hints, int type)
   hints.ai_next = NULL;
   hints.ai_socktype = type;
   hints.ai_family = AF_UNSPEC;
-  hints.ai_flags = AI_PASSIVE; 
+  hints.ai_flags = AI_PASSIVE;
 }
 
 
 int PreparePassiveSocket(const char *host, const char *service, int type, SocketAddress *sockaddr, bool doListen,int backlog) 
 {
   struct addrinfo hints;
-  struct addrinfo *result, *rp;
+  struct addrinfo *result;
+  struct addrinfo *rp;
   int sfd;
   int res;
 
-  prepare_hints(hints,type);
+
+  // 名前空間の解決
+  prepare_hints(hints, type);
   res = getaddrinfo(host, service, &hints, &result);
   if (res != 0)
     return (-1);
@@ -56,7 +63,7 @@ int PreparePassiveSocket(const char *host, const char *service, int type, Socket
       {
         close(sfd);
         freeaddrinfo(result);
-        return -1;
+        return (-1);
       }
     }
     if (bind(sfd, rp->ai_addr, rp->ai_addrlen) == 0)
@@ -69,7 +76,7 @@ int PreparePassiveSocket(const char *host, const char *service, int type, Socket
     if (listen(sfd, backlog) == -1) 
 	  {
       freeaddrinfo(result);
-      return -1;
+      return (-1);
     }
   }
   if (rp != NULL && sockaddr != NULL) 
@@ -99,21 +106,21 @@ int InetListen(const std::string &host, const std::string &service, int backlog,
 }
 
 
-FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) {
+FdEvent *CreateFdEvent(int fd, FdFunc func, void *data) 
+{
   FdEvent *fde = new FdEvent();
   fde->fd = fd;
   fde->func = func;
   fde->timeout_ms = 0;
   fde->data = data;
   fde->state = 0;
-  return fde;
+  return (fde);
 }
 
 void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 
-    std::cout << "Request received:\n" << "HandleClient" << std::endl;
     // 読み込みイベントの処理
     if (events & kFdeRead) 
     {
@@ -127,9 +134,11 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             epoll->delete_event(fde);
             delete fde;
             delete client_sock;
+
+            //read失敗時の挙動今とりあえずリターンしている
             return;
         }
-        // クライアントが接続を切断した場合
+        // クライアントが接続を切断した場合、今とりあえずほぼ同じ
         if (readsize == 0) 
         {
             close(fde->fd);
@@ -138,26 +147,47 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             delete client_sock;
             return;
         }
-        buffer[readsize] = '\0'; // null終端を追加
-        std::string request(buffer); // 読み込んだデータを文字列に変換
-
-
-        std::cout <<  request << std::endl;
+        // buffer[readsize] = '\0'; // null終端を追加
+        // std::string request(buffer); // 読み込んだデータを文字列に変換
+        std::cout <<":::" << buffer << ":::" << std::endl;
         // 読み込んだデータを処理する（例: HTTPリクエスト解析）
         // ここでリクエストに応じたレスポンスを作成
-
+  
+	      HTTPRequest request;
+	      ParseRequest parser_request(request);
+		    parser_request.parse(buffer);
+        request.print();
+        std::cout << parser_request.isFinished() << std::endl;
+        // HTTPResponse response(config);
+		    // response.selectResponseMode(request);   // 適切なレスポンスモードを選択し、処理
         // 書き込みイベントを登録する
-        client_sock->SetResponse(client_sock->GetResponse() + request); // クライアントソケットにレスポンスを保存
+        client_sock->SetResponse(client_sock->GetResponse() + buffer); // クライアントソケットにレスポンスを保存
         //Now if "keep" is found in first four characters keeo alive
-        if (request.substr(0,4) == "keep")
-          std::cout << "ok keep alive" << std::endl;
-        else
-          epoll->GotoNextEvent(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
+        epoll->GotoNextEvent(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
     }
     // 書き込みイベントの処理
     if (events & kFdeWrite) 
     {
-        const std::string &response = "It is Fake Reponse\nwe get this:\n" + client_sock->GetResponse();
+    std::string response =
+    "HTTP/1.1 200 OK\r\n"
+    "Date: Wed, 21 Nov 2024 12:00:00 GMT\r\n"
+    "Server: Apache/2.4.41 (Ubuntu)\r\n"
+    "Last-Modified: Tue, 19 Nov 2024 14:00:00 GMT\r\n"
+    "Content-Type: text/html; charset=UTF-8\r\n"
+    "Content-Length: 201\r\n"
+    "Connection: close\r\n"
+    "\r\n"
+    "<!DOCTYPE html>\r\n"
+    "<html>\r\n"
+    "<head>\r\n"
+    "    <title>Example Page</title>\r\n"
+    "</head>\r\n"
+    "<body>\r\n"
+    "    <h1>Welcome to the Example Page!</h1>\r\n"
+    "    <p>This is a sample response to your GET request.</p>\r\n"
+    "</body>\r\n"
+    "</html>";
+
         ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
         if (nwritten == -1) 
         {

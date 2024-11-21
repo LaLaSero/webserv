@@ -137,10 +137,11 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
 {
     std::vector<FdandEvent> fdee_vec;
     std::vector<epoll_event> epoll_events;
+
     epoll_events.resize(registered_fd_events_.size());
     int event_num = epoll_wait(epfd_, epoll_events.data(), epoll_events.size(), timeout_ms);
     if (event_num < 0) 
-        throw std::runtime_error("Error occurred in Wait event");
+        throw std::runtime_error("Error occurred in epoll_wait");
     for (int i = 0; i < event_num; ++i) 
     {
         if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end())
