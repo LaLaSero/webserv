@@ -4,13 +4,12 @@
 int main()
 {
 	HTTPRequest request;
-	
+
 	CgiHandler cgi_handler(request);
 
 	std::string response = cgi_handler.ExecuteCGI();
 
-	std::cout << "CGI Response:\n"
-			  << response << std::endl;
+	std::cout << "CGI Response:\n\n" << response << std::endl;
 
 	return 0;
 }

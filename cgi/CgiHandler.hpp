@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../request/HTTPRequest.hpp"
+#include "CgiResponse.hpp"
 
 class CgiHandler
 {
@@ -25,7 +26,6 @@ public:
 	CgiHandler(HTTPRequest &request);
 	void setRequestBody(const std::string &body);
 	std::string ExecuteCGI();
-	std::string ParseCGIresponse(const std::string &rawResponse);
 };
 
 #endif

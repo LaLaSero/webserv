@@ -5,6 +5,7 @@ CgiHandler::CgiHandler(HTTPRequest &request) : request_(request)
 	env_vars_["REQUEST_METHOD"] = request_.getMethod();
 	env_vars_["REQUEST_METHOD"] = "GET"; //for test
 	env_vars_["QUERY_STRING"] = request_.getQuery();
+	env_vars_["QUERY_STRING"] = "type=document-response"; //for test
 	env_vars_["SCRIPT_NAME"] = request_.getUri(); 
 	env_vars_["CONTENT_TYPE"] = "test";
 	env_vars_["CONTENT_LENGTH"] = request_.getBody().size();
@@ -99,81 +100,11 @@ std::string CgiHandler::ExecuteCGI()
 		waitpid(pid, &status, 0);
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
-			return ParseCGIresponse(cgi_response); // responseの作成
+			return  ParseCGIResponse(cgi_response); // responseの作成
 		}
 		else
 		{
 			return "500 Internal Server Error";
 		}
 	}
-}
-
-
-
-std::string CgiHandler::ParseCGIresponse(const std::string &raw_response)
-{
-
-	size_t header_end = raw_response.find("\r\n\r\n");
-	if (header_end == std::string::npos)
-	{
-		header_end = raw_response.find("\n\n");
-		if (header_end == std::string::npos)
-		{
-			// ヘッダーが存在しない場合
-			return "500 Internal Server Error";
-		}
-	}
-
-	std::string header_section = raw_response.substr(0, header_end);
-	std::string body = raw_response.substr(header_end + 4); // Skip the header ending
-
-	std::map<std::string, std::string> headers_table;
-	std::istringstream header_stream(header_section);
-	std::string line;
-	while (std::getline(header_stream, line) && !line.empty())
-	{
-		if (line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1); // Remove carriage return
-		size_t delimiter = line.find(": ");
-		if (delimiter != std::string::npos)
-		{
-			std::string key = line.substr(0, delimiter);
-			std::string value = line.substr(delimiter + 2);
-			headers_table[key] = value;
-		}
-	}
-
-	std::string status_line = "HTTP/1.1 200 OK\r\n"; // default statusの設定
-	if (headers_table.find("Status") != headers_table.end()) // Statusの確認
-	{
-		status_line = "HTTP/1.1 " + headers_table["Status"] + "\r\n";
-		headers_table.erase("Status");
-	}
-
-	if (headers_table.find("Location") != headers_table.end()) // Redirectの確認
-	{
-		std::string location = headers_table["Location"];
-		if (!location.empty() && location[0] == '/') // Local redirect
-		{
-			std::cout << "Local redirect: " << location << std::endl;
-			// Handle local redirect (internal redirect)
-			std::string internal_redirect_uri_ = location;
-			return "";
-		}
-		else
-		{
-			// External redirect
-			status_line = "HTTP/1.1 302 Found\r\n";
-		}
-	}
-
-	std::ostringstream response_stream;
-	response_stream << status_line;
-	for (std::map<std::string, std::string>::iterator it = headers_table.begin(); it != headers_table.end(); ++it)
-	{
-		response_stream << it->first << ": " << it->second << "\r\n";
-	}
-	response_stream << "\r\n";
-
-	return response_stream.str();
 }

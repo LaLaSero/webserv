@@ -3,7 +3,7 @@
 NAME=cgitest
 CXX=c++
 CXXFLAGS=-std=c++98 -Wall -Wextra -Werror
-SRC=CgiHandler.cpp cgitest_main.cpp ../request/HTTPRequest.cpp
+SRC=CgiHandler.cpp cgitest_main.cpp ../request/HTTPRequest.cpp CgiResponse.cpp
 OBJ=$(SRC:.cpp=.o)
 
 test: re
