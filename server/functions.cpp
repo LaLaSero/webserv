@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/21 19:16:42 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/22 11:36:09 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,38 +156,22 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	      HTTPRequest request;
 	      ParseRequest parser_request(request);
 		    parser_request.parse(buffer);
-        request.print();
-        std::cout << parser_request.isFinished() << std::endl;
-        // HTTPResponse response(config);
-		    // response.selectResponseMode(request);   // 適切なレスポンスモードを選択し、処理
+        // request.print();
+	      HTTPResponse response(epoll->get_config());
+        response.selectResponseMode(request);
+        std::string res;
+        res = response.makeBodyResponse();
+        // std::cout<< "***" << res << "***"<< std::endl;
         // 書き込みイベントを登録する
-        client_sock->SetResponse(client_sock->GetResponse() + buffer); // クライアントソケットにレスポンスを保存
+        client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
         //Now if "keep" is found in first four characters keeo alive
         epoll->GotoNextEvent(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
     }
     // 書き込みイベントの処理
     if (events & kFdeWrite) 
     {
-    std::string response =
-    "HTTP/1.1 200 OK\r\n"
-    "Date: Wed, 21 Nov 2024 12:00:00 GMT\r\n"
-    "Server: Apache/2.4.41 (Ubuntu)\r\n"
-    "Last-Modified: Tue, 19 Nov 2024 14:00:00 GMT\r\n"
-    "Content-Type: text/html; charset=UTF-8\r\n"
-    "Content-Length: 201\r\n"
-    "Connection: close\r\n"
-    "\r\n"
-    "<!DOCTYPE html>\r\n"
-    "<html>\r\n"
-    "<head>\r\n"
-    "    <title>Example Page</title>\r\n"
-    "</head>\r\n"
-    "<body>\r\n"
-    "    <h1>Welcome to the Example Page!</h1>\r\n"
-    "    <p>This is a sample response to your GET request.</p>\r\n"
-    "</body>\r\n"
-    "</html>";
-
+        std::string response = client_sock->GetResponse();
+        std::cout << response << std::endl;
         ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
         if (nwritten == -1) 
         {
@@ -199,7 +183,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             return;
         }
         // 書き込み完了後に接続をクローズ
-        std::cout << "Response sent, closing connection, fd: " << fde->fd << std::endl;
+        // std::cout << "Response sent, closing connection, fd: " << fde->fd << std::endl;
 
         epoll->delete_event(fde);     
         delete client_sock;

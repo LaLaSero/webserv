@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/04 13:56:13 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/22 10:00:45 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 		config_file_path = argv[1];
 	Parser pas;
 	Config conf;
-	EpollAdm epo;
+	EpollAdm epo(conf);
 	try
 	{
 		pas.LoadFile(config_file_path);

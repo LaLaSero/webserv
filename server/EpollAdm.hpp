@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #pragma once
+
+#include"../config/Config.hpp"
 #include <sys/epoll.h>
 #include<iostream>
 #include <cassert>
@@ -56,7 +58,8 @@ struct FdandEvent {
 class EpollAdm
 {
 	public:
-    EpollAdm();
+    EpollAdm(const Config &conf);
+    Config get_config()const;
     void register_event(FdEvent *fde);
     void delete_event(FdEvent *fde);
     void Set(FdEvent *fde, unsigned int events);
@@ -67,4 +70,5 @@ class EpollAdm
 	private:
     const int epfd_;
     std::map<int, FdEvent *> registered_fd_events_;
+    const Config& config_;
 };

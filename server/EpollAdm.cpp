@@ -51,7 +51,7 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
   return fdee;
 }
 
-EpollAdm::EpollAdm():epfd_(epoll_create1(0)) 
+EpollAdm::EpollAdm(const Config &conf):epfd_(epoll_create1(0)),config_(conf)
 {
     if (epfd_ == -1) 
       throw std::runtime_error("Failed to create epoll file descriptor");
@@ -171,4 +171,10 @@ void EpollAdm::GotoNextEvent(FdEvent *fde, unsigned int events)
     // epoll_ctl を使ってイベントを変更
     if (epoll_ctl(epfd_, EPOLL_CTL_MOD, fde->fd, &epev) < 0) 
         throw std::runtime_error("Epoll GotoNextEvent Error: epoll_ctl failed");
+}
+
+
+Config EpollAdm::get_config()const
+{
+  return (config_);
 }

@@ -67,7 +67,10 @@ class HTTPResponse
 		std::string mapUriToPath(std::string uri);
 
 		std::string intToString(int number) const;
-
+		//ryanagit origina
+		std::string makeBodyResponse();
+		std::string getStatusMessage();
+		void setHeadersContentType(std::string& true_path);
 	private:
 		std::string		_version;
 		std::string		_statusMessage;
