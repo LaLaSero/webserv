@@ -8,6 +8,7 @@ HTTPResponse::HTTPResponse(const Config& _config)
 	, _keepAlive(true)
 	, _body("")
 	, _statusCode(STATUS_200)
+	,_server(NULL)
 {
 	setStatusMessageMap();
 }
@@ -170,4 +171,9 @@ std::string HTTPResponse::intToString(int number) const
 	std::stringstream ss;
 	ss << number;
 	return ss.str();
+}
+
+void HTTPResponse::SetChildServer(const ChildServer *cs)
+{
+	_server = cs;
 }

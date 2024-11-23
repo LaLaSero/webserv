@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 15:03:13 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/23 16:42:11 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,3 +95,24 @@ void Location::add_Acceptedmethods(const std::string tmp)
 	accepted_methods_.push_back(tmp);
 }
 
+Location& Location::operator=(const Location& other)
+{
+    // 自分自身に代入しないようにチェック
+    if (this == &other) {
+        return *this;  // 同一オブジェクトに対する代入は何もしない
+    }
+
+    // メンバー変数のコピー
+    path_ = other.path_;
+    accepted_methods_ = other.accepted_methods_;
+    root_directory_ = other.root_directory_;
+    directory_listing_ = other.directory_listing_;
+    redirection_ = other.redirection_;
+    default_file_ = other.default_file_;
+    upload_directory_ = other.upload_directory_;
+    client_max_body_size_ = other.client_max_body_size_;
+    cgi_extension_ = other.cgi_extension_;
+
+    // コピーしたオブジェクト自身を返す
+    return *this;
+}

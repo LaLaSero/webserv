@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:20:04 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/19 09:44:15 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/23 15:18:55 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,21 @@ std::vector<ChildServer> Config::getchildserver()const
 	return(ChildServers_);
 }
 
+void Config::AddFdandServers(int fd, ChildServer &Server)
+{
+    FdandServers_[fd] = Server;
+}
+
+const ChildServer& Config::FindServerfromFd(int fd)const 
+{
+    // fd に対応するサーバーがマップに存在するか確認
+    std::map<int, ChildServer>::const_iterator it = FdandServers_.find(fd);
+    // 見つからない場合は例外を投げるなどのエラーハンドリング
+    if (it == FdandServers_.end())
+        throw std::runtime_error("Server not found for the given file descriptor.");
+    // 見つかった場合は、対応するサーバーを参照として返す
+    return it->second;
+}
 
 void Config::displayConfig() const {
     //for debug

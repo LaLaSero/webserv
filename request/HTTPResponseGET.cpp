@@ -24,11 +24,14 @@ std::string get_file_content(const std::string& path)
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
 
-std::string make_true_path(std::string &uri)
+std::string make_true_path(const std::string &uri, const std::string &root_path)
 {
     std::string tmp;
 
-    tmp = "/home/ryanagit/" + uri;
+    if (root_path.empty())
+        return (uri);
+    else
+        tmp = root_path + uri;
     return (tmp);
 }
 
@@ -59,7 +62,6 @@ void HTTPResponse::setHeadersContentType(std::string& true_path)
 {
     // 拡張子を取得
     std::string extension = get_file_extension(true_path);
-
     // 拡張子に基づいてContent-Typeを設定
     if (extension == "html") 
         _headers["Content-Type"] = "text/html";
@@ -103,11 +105,31 @@ void process_dir()
 
 }
 
+
+
+
+
+// bool check_location(constConfig &config, std::string uri)
+// {
+
+// }
+
+std::vector<Location>::const_iterator find_location(const ChildServer *Server, const std::string& path)
+{
+    const std::vector<Location>& loc = Server->getLocations();
+    
+    for (std::vector<Location>::const_iterator it = loc.begin(); it != loc.end(); ++it)
+    {
+        if (path.compare(0, it->getPath().size(), it->getPath()) == 0) 
+            return it;
+    }
+    return Server->getLocations().end();
+}
+
 void HTTPResponse::makeBodyGET(HTTPRequest& request)
 {
 	// it is no config is too hard
-	// 
-	// if (check_location)
+	// if (check_location(_config, request.getUri()))
 	// {
 	// 	if (check_redirect())
 	// 	{	
@@ -115,10 +137,18 @@ void HTTPResponse::makeBodyGET(HTTPRequest& request)
 	// 		return ;
 	// 	} (redirect())
 	// }
-	// 
 	std::string uri = request.getUri();
-    std::string true_path = make_true_path(uri);
-    std::cout << true_path << std::endl;
+    std::string true_path;
+    if (!(_server->getLocations().empty()))
+    {
+      if (find_location(_server,request.getPath()) != _server->getLocations().end())
+      {
+        Location loc =*(find_location(_server,request.getPath()));
+        // if (Redirect_check)
+        true_path = make_true_path(uri, loc.getRootDirectory() );
+      }
+    }
+    std::cout <<"true path" <<  true_path << std::endl;
  	if (access(true_path.c_str(), F_OK) != 0)
 	{
         _statusCode = STATUS_404;

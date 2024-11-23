@@ -27,6 +27,13 @@ ClientSocket::ClientSocket(int client_fd, SocketAddress client_address, const Co
 }
 ClientSocket::ClientSocket(int fd, const SocketAddress &server_addr,
                        const SocketAddress &client_addr,
-                       const Config &config) : Socket(fd, server_addr, config),
+                       const Config &config, int server_fd) : Socket(fd, server_addr, config),
       client_addr_(client_addr),
-      is_shutdown_(false) {}
+      is_shutdown_(false),
+      server_fd_(server_fd) {}
+
+
+int ClientSocket::get_server_fd()const
+{
+  return (server_fd_);
+}

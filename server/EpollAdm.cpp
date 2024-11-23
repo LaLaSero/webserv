@@ -174,7 +174,7 @@ void EpollAdm::GotoNextEvent(FdEvent *fde, unsigned int events)
 }
 
 
-Config EpollAdm::get_config()const
+const Config& EpollAdm::get_config()const
 {
   return (config_);
 }

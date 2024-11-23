@@ -67,10 +67,11 @@ class HTTPResponse
 		std::string mapUriToPath(std::string uri);
 
 		std::string intToString(int number) const;
-		//ryanagit origina
+		//ryanagit original
 		std::string makeBodyResponse();
 		std::string getStatusMessage();
 		void setHeadersContentType(std::string& true_path);
+		void SetChildServer(const ChildServer *loc);
 	private:
 		std::string		_version;
 		std::string		_statusMessage;
@@ -83,6 +84,8 @@ class HTTPResponse
 		HTTPStatusCode	_statusCode;
 
 		const Config&	_config;
+
+		const ChildServer *_server;
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/22 11:36:09 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/23 17:29:50 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -124,7 +124,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
     // 読み込みイベントの処理
     if (events & kFdeRead) 
     {
-        // std::cout << "start reading" << std::endl;
+        std::cout << "start reading" << std::endl;
+        std::cout << client_sock->get_server_fd() << std::endl;
         char buffer[1024];
         ssize_t readsize = read(fde->fd, buffer, sizeof(buffer));
         if (readsize == -1) 
@@ -152,15 +153,19 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         std::cout <<":::" << buffer << ":::" << std::endl;
         // 読み込んだデータを処理する（例: HTTPリクエスト解析）
         // ここでリクエストに応じたレスポンスを作成
-  
 	      HTTPRequest request;
 	      ParseRequest parser_request(request);
+
+        //requestにlocationを設定
+        std::cout << client_sock->get_server_fd() << std::endl;
+        ChildServer Server =epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
+        
 		    parser_request.parse(buffer);
-        // request.print();
 	      HTTPResponse response(epoll->get_config());
+        response.SetChildServer(&Server);
         response.selectResponseMode(request);
-        std::string res;
-        res = response.makeBodyResponse();
+        // request.print();
+        std::string res = response.makeBodyResponse();
         // std::cout<< "***" << res << "***"<< std::endl;
         // 書き込みイベントを登録する
         client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
@@ -216,12 +221,8 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
       epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
     }
   if (events & kFdeError) 
-  {
     throw std::runtime_error("Errorrrrrr");
-  }
 }
-
-
 
 void set_up_server(EpollAdm &epoll, Config &conf)
 {
@@ -259,6 +260,9 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         // // // 使用済みのIPとポートの組み合わせを記録
         used_ip_ports.push_back(ip_port);
         opened_fd.push_back(fd); 
+
+        conf.AddFdandServers(fd, *it);
+        std::cout << "fd:" << fd << std::endl;
     }
 }
 

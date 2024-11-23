@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/27 15:02:19 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/03 12:07:25 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/22 16:53:04 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,6 @@ ClientSocket *ListenSocket::AcceptNewConnection()
   }
   ClientSocket *conn_sock = new ClientSocket(
       conn_fd, server_addr_,
-      SocketAddress((const struct sockaddr *)&client_addr, addrlen), config_);
+      SocketAddress((const struct sockaddr *)&client_addr, addrlen), config_, fd_);
   return conn_sock;
 }

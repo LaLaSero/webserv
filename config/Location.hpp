@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/24 16:51:18 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/03 15:03:19 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/23 16:42:38 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ public:
 
 
 	void add_Acceptedmethods(const std::string tmp);
-
+    Location& operator=(const Location& other);
 private:
     std::string path_;
     std::vector<std::string> accepted_methods_;

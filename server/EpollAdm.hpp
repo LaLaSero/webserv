@@ -59,7 +59,7 @@ class EpollAdm
 {
 	public:
     EpollAdm(const Config &conf);
-    Config get_config()const;
+    const Config& get_config()const;
     void register_event(FdEvent *fde);
     void delete_event(FdEvent *fde);
     void Set(FdEvent *fde, unsigned int events);
