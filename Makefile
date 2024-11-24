@@ -29,6 +29,7 @@ SRCS = main.cpp \
        request/ParseRequest.cpp \
        request/HTTPStatusMessage.cpp \
        request/HTTPResponse.cpp\
+       request/MethodUtils.cpp\
        request/parse_state/RequestLineState.cpp \
        request/parse_state/HeadersState.cpp \
        request/parse_state/FinishState.cpp \

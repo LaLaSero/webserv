@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/23 17:29:50 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/24 20:36:31 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         // ここでリクエストに応じたレスポンスを作成
 	      HTTPRequest request;
 	      ParseRequest parser_request(request);
-
         //requestにlocationを設定
         std::cout << client_sock->get_server_fd() << std::endl;
         ChildServer Server =epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
