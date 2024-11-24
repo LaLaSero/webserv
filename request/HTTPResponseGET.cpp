@@ -35,17 +35,45 @@ std::string make_true_path(const std::string &uri, const std::string &root_path)
     return (tmp);
 }
 
-std::string get_forbidden_page()
+// std::string get_forbidden_page(int status, const Server &serv)
+// {
+//     std::string body;
+//     body = "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>";
+//     return (body);
+// }
+
+std::string get_forbidden_page(int status, const ChildServer *serv)
 {
     std::string body;
-    body = "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>";
-    return (body);
+
+    // errorPagesの検索
+    std::map<int, std::string>::const_iterator it = serv->get_error_page().find(status);
+    
+    std::cout << status << std::endl;
+    // statusに対応するエラーページが見つかった場合
+    if (it != serv->get_error_page().end()) 
+        body = get_file_content(it->second);
+    else
+        // 見つからない場合はデフォルトの403ページを設定
+        body = "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>";
+    return body;
 }
 
-std::string get_not_found_page()
+
+std::string get_not_found_page(int status, const ChildServer *serv)
 {
     std::string body;
-    body = "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><p>The requested URL was not found on this server.</p></body></html>";
+
+    // errorPagesの検索
+    std::map<int, std::string>::const_iterator it = serv->get_error_page().find(status);
+    
+    std::cout << status << std::endl;
+    // statusに対応するエラーページが見つかった場合
+    if (it != serv->get_error_page().end()) 
+        body = get_file_content(it->second);
+    else
+        // 見つからない場合はデフォルトの403ページを設定
+        body = "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><p>The requested URL was not found on this server.</p></body></html>";
     return (body);
 }
 
@@ -100,19 +128,11 @@ static bool is_dir(const std::string &path)
 		return (false);
 }
 
-void process_dir()
+std::string get_redirect_body(const std::string uri)
 {
-
+    std::string html = "<html><body><p>You are being redirected to <a href=\"" + uri + "\">this page</a>.</p></body></html>";
+    return (html);
 }
-
-
-
-
-
-// bool check_location(constConfig &config, std::string uri)
-// {
-
-// }
 
 std::vector<Location>::const_iterator find_location(const ChildServer *Server, const std::string& path)
 {
@@ -128,43 +148,94 @@ std::vector<Location>::const_iterator find_location(const ChildServer *Server, c
 
 void HTTPResponse::makeBodyGET(HTTPRequest& request)
 {
-	// it is no config is too hard
-	// if (check_location(_config, request.getUri()))
-	// {
-	// 	if (check_redirect())
-	// 	{	
-	// 		check_redirect();
-	// 		return ;
-	// 	} (redirect())
-	// }
 	std::string uri = request.getUri();
-    std::string true_path;
+    std::string true_path = uri;
+    Location loc;
     if (!(_server->getLocations().empty()))
     {
       if (find_location(_server,request.getPath()) != _server->getLocations().end())
       {
-        Location loc =*(find_location(_server,request.getPath()));
-        // if (Redirect_check)
-        true_path = make_true_path(uri, loc.getRootDirectory() );
+        std::cout << (*(find_location(_server,request.getPath()))).getPath() << std::endl;
+        loc = *(find_location(_server,request.getPath()));
+        if (!loc.getRedirection().second.empty())
+        {
+            _statusCode = static_cast<HTTPStatusCode>(loc.getRedirection().first);
+            _body = get_redirect_body(loc.getRedirection().second);
+            return ;
+        }
+        true_path = make_true_path(uri, loc.getRootDirectory());
       }
     }
-    std::cout <<"true path" <<  true_path << std::endl;
  	if (access(true_path.c_str(), F_OK) != 0)
 	{
         _statusCode = STATUS_404;
-		_body = get_not_found_page();
+		_body = get_not_found_page(_statusCode, _server);
         _contentLength = _body.size();
 		return ;
 	}
 	if (is_dir(true_path))
 	{
-		process_dir();
+        if (find_location(_server,request.getPath()) == _server->getLocations().end())
+        {
+            _statusCode = STATUS_403;
+		    _body = get_forbidden_page(_statusCode, _server);
+            _contentLength = _body.size();
+            return ;
+        }
+        else
+        {
+            if (loc.getDefaultFile().empty())
+            {
+                if(loc.isDirectoryListing())
+                {
+                    _statusCode = STATUS_200;
+	                std::vector<FileInfo> fileList = readDirectoryContents(true_path);
+	                 _body =  generateAutoIndexHTML(fileList, uri);
+                    _contentLength = _body.size();
+                    return ;
+                }
+                else
+                {
+                    _statusCode = STATUS_403;
+		            _body = get_forbidden_page(_statusCode, _server);
+                    _contentLength = _body.size();
+                    return ;
+                }
+            }
+            else
+            {
+                true_path = true_path + loc.getDefaultFile();
+ 	            if (access(true_path.c_str(), F_OK) != 0)
+	            {
+                    _statusCode = STATUS_404;
+		            _body = get_not_found_page(_statusCode, _server);
+                    _contentLength = _body.size();
+		            return ;
+                }
+                std::string body = get_file_content(true_path);
+                if (body.empty())
+                {
+                    _statusCode = STATUS_403;
+		            _body = get_forbidden_page(_statusCode, _server);
+                    _contentLength = _body.size();
+                }
+                else
+                {
+                    _statusCode = STATUS_200;
+                    _body = body;
+                    _contentLength = _body.size();
+                    setHeadersContentType(true_path);
+                    return;
+                }
+            }
+            return ;
+        }
 	}
     std::string body = get_file_content(true_path);
     if (body.empty())
     {
         _statusCode = STATUS_403;
-		_body = get_forbidden_page();
+		_body = get_forbidden_page(_statusCode, _server);
         _contentLength = _body.size();
     }
     else

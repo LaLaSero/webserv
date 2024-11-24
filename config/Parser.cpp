@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/19 09:55:07 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/24 11:18:15 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,7 +214,7 @@ size_t Parser::max_stos(std::string &limit)
 	{
 		if (!(isdigit(limit[i])))
 			throw std::runtime_error("ParseCLMAX: Non digit");
-		count = count * 10 + count + (limit[i] - '0');
+		count = count * 10 + (limit[i] - '0');
 		i++;
 	}
 	if (i != limit.size())
@@ -234,12 +234,15 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 {
 	std::string original;
 	std::string late;
-
+	size_t i;
 	line = line.substr(line.find(' ')+ 1);
 	original = line.substr(0, line.find(' '));
 	late = line.substr(line.find(' ') + 1);
-	late.erase(late.size() - 1);;
-	std::pair<std::string, std::string> pair(original, late);
+	late.erase(late.size() - 1);
+	i = max_stos(original);
+	if (i < 301 || (303 < i && i < 307) || 308 < i)
+		throw std::runtime_error("ParseCLMAX: Wrong Number Redirect");
+	std::pair<int, std::string> pair(i, late);
 	loc.setRedirection(pair);
 }
 

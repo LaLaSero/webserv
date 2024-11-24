@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/23 16:42:11 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/24 11:03:05 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ std::vector<std::string> Location::getAcceptedMethods() const {
     return accepted_methods_;
 }
 
-std::pair<std::string, std::string> Location::getRedirection() const {
+std::pair<int, std::string> Location::getRedirection() const {
     return redirection_;
 }
 
@@ -61,7 +61,7 @@ void Location::setAcceptedMethods(const std::vector<std::string> &methods) {
     accepted_methods_ = methods;
 }
 
-void Location::setRedirection(const std::pair<std::string, std::string> &redirection) 
+void Location::setRedirection(const std::pair<int, std::string> &redirection) 
 {
     redirection_ = redirection;
 }
