@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/24 20:00:39 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/24 20:28:37 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 12:46:25 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,8 @@ bool is_dir(const std::string &path);
 // `Location` に基づいて適切なロケーションを探す
 std::vector<Location>::const_iterator find_location(const ChildServer *Server, const std::string& path);
 
+
+#define P200 "<html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>"
 
 #define EP400 "<html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>"
 #define EP403 "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>"

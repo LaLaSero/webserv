@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HTTPResponseGET.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/11/25 19:58:21 by ryanagit          #+#    #+#             */
+/*   Updated: 2024/11/26 10:27:48 by ryanagit         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "HTTPResponse.hpp"
 #include "HTTPRequest.hpp"
 #include"MethodUtils.hpp"
@@ -17,6 +29,7 @@ void HTTPResponse::makeBodyGET(HTTPRequest& request)
         {
             _statusCode = static_cast<HTTPStatusCode>(loc.getRedirection().first);
             _body = get_redirect_body(loc.getRedirection().second);
+            _contentLength = _body.size();
             return ;
         }
         true_path = make_true_path(uri, loc.getRootDirectory());
