@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/24 20:00:43 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/24 20:24:33 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 16:31:57 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,4 +114,14 @@ std::vector<Location>::const_iterator find_location(const ChildServer *Server, c
             return it;
     }
     return Server->getLocations().end();
+}
+
+bool is_max_over(const std::string body, size_t max)
+{
+    std::cout << "body:" <<body.length() << std::endl;
+    std::cout << "max:" << max << std::endl;
+    if (body.length() > max)
+        return (true);
+    else
+        return (false);
 }

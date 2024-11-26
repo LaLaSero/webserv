@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:26 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/26 15:41:46 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 16:25:43 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,13 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
   std::string true_path = uri;
   Location loc;
 
+  if (is_max_over(request.getBody(), _server->get_request_max()))
+  {
+    _statusCode = STATUS_400;
+		_body = get_error_page(_statusCode, _server, EP400);
+    _contentLength = _body.size();
+		return ;
+  }
   if (!(_server->getLocations().empty()))
   {
     if (find_location(_server,request.getPath()) != _server->getLocations().end())

@@ -12,6 +12,9 @@
 
 #include"ChildServer.hpp"
 
+ChildServer::ChildServer():reqbody_size_(req_max_body_size)
+{
+}
 
 
 std::string ChildServer::get_listen_ip_() const 

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/24 20:00:39 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/26 12:46:25 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 16:26:12 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ std::string get_error_page(int status, const ChildServer *serv, std::string defa
 std::string make_true_path(const std::string &uri, const std::string &root_path);
 
 
+
+
 // サーバー上のパスがディレクトリかどうかを判定
 bool is_dir(const std::string &path);
 
@@ -58,7 +60,11 @@ bool is_dir(const std::string &path);
 std::vector<Location>::const_iterator find_location(const ChildServer *Server, const std::string& path);
 
 
-#define P200 "<html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>"
+//max_body_check
+
+bool is_max_over(const std::string status, size_t max);
+
+#define P200 "<html><head><title>200 OK</title></head><body><h1>200 OK</h1></body></html>"
 
 #define EP400 "<html><head><title>400 Bad Request</title></head><body><h1>400 Bad Request</h1></body></html>"
 #define EP403 "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>"

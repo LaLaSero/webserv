@@ -6,13 +6,13 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/24 11:03:05 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 17:55:03 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Location.hpp"
 
-Location::Location() :  directory_listing_(false), client_max_body_size_(0) {}
+Location::Location() :  directory_listing_(false){}
 
 std::string Location::getPath() const {
     return path_;
@@ -45,11 +45,6 @@ std::map<std::string, std::string> Location::getCgiExtension() const {
 std::string Location::getUploadDirectory() const {
     return upload_directory_;
 }
-
-size_t Location::getClientMaxBodySize() const {
-    return client_max_body_size_;
-}
-
 
 
 // Setter
@@ -86,10 +81,6 @@ void Location::setUploadDirectory(const std::string &uploadDirectory) {
     upload_directory_ = uploadDirectory;
 }
 
-void Location::setClientMaxBodySize(size_t maxSize) {
-    client_max_body_size_ = maxSize;
-}
-
 void Location::add_Acceptedmethods(const std::string tmp)
 {
 	accepted_methods_.push_back(tmp);
@@ -110,7 +101,6 @@ Location& Location::operator=(const Location& other)
     redirection_ = other.redirection_;
     default_file_ = other.default_file_;
     upload_directory_ = other.upload_directory_;
-    client_max_body_size_ = other.client_max_body_size_;
     cgi_extension_ = other.cgi_extension_;
 
     // コピーしたオブジェクト自身を返す

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/24 11:18:15 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 17:59:37 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -304,16 +304,6 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 			tmp.erase(tmp.size() - 1);
 			loc.setUploadDirectory(tmp);
 		}
-		else if ( check_syntax(red, "client_max ",true))
-		{
-			tmp = red.substr(red.find(' ') + 1);
-			tmp.erase(tmp.size() - 1);
-			if (tmp.size() > 7)
-				throw  std::runtime_error("ParseLocation Error:';' too large client_max " + red);
-			size_t i;
-			i = max_stos(tmp);
-			loc.setClientMaxBodySize(i);
-		}
 		else
 			throw std::runtime_error("ParseLocation Error:unkown word is found");
 		// we have to add cgi infomation;
@@ -329,6 +319,7 @@ void Parser::MakeChildServer(Config &conf)
 	ChildServer serv;
 	std::string line;
 
+	serv.set_request_max(req_max_body_size);
 	if (!(std::getline(content_, line) && line =="{"))
 		throw std::exception();
 	while(std::getline(content_, line) && line !=  "}")
