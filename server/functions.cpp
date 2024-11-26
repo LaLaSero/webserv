@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/24 20:36:31 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 15:17:59 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             epoll->delete_event(fde);
             delete fde;
             delete client_sock;
-
             //read失敗時の挙動今とりあえずリターンしている
             return;
         }
@@ -155,20 +154,14 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         // ここでリクエストに応じたレスポンスを作成
 	      HTTPRequest request;
 	      ParseRequest parser_request(request);
-        //requestにlocationを設定
-        std::cout << client_sock->get_server_fd() << std::endl;
         ChildServer Server =epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
         
 		    parser_request.parse(buffer);
 	      HTTPResponse response(epoll->get_config());
         response.SetChildServer(&Server);
         response.selectResponseMode(request);
-        // request.print();
         std::string res = response.makeBodyResponse();
-        // std::cout<< "***" << res << "***"<< std::endl;
-        // 書き込みイベントを登録する
         client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
-        //Now if "keep" is found in first four characters keeo alive
         epoll->GotoNextEvent(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
     }
     // 書き込みイベントの処理

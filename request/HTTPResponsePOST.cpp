@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:26 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/26 12:48:08 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 15:41:46 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
         true_path = loc.getUploadDirectory();
     }
   }
+  std::cout << true_path << std::endl;
  	if (access(true_path.c_str(), F_OK) != 0)
 	{
     _statusCode = STATUS_404;

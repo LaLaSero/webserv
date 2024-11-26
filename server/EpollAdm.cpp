@@ -69,13 +69,9 @@ void EpollAdm::register_event(FdEvent *fde)
 
 void EpollAdm::delete_event(FdEvent *fde)
 {
-    // 登録されたイベントが見つからない場合はエラーをスロー
     std::map<int,FdEvent*>::iterator it = registered_fd_events_.find(fde->fd);
     if (it == registered_fd_events_.end()) 
-    {
         throw std::runtime_error("delete_event Error: File descriptor not registered");
-    }
-
     // epoll_ctl を使ってイベントを削除
     std::cout << epfd_ << std::endl;
     std::cout << fde->fd << std::endl;
