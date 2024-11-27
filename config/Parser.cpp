@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:43 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 17:59:37 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,17 @@ Parser& Parser::operator=(const Parser& other)
 
 void Parser::LoadFile(const std::string& file_path)
 {
-    std::ifstream ifs(file_path);
-    if (!ifs) 
+    // std::ifstreamのオープン
+    std::ifstream ifs(file_path.c_str());
+    if (!ifs) {
         throw std::runtime_error("Failed to open file: " + file_path);
+    }
 
+    // ストリームに内容を読み込む
     std::stringstream ss;
     ss << ifs.rdbuf();
+
+    // 文字列ストリームの内容をcontent_にセット
     content_.str(ss.str());
 }
 
@@ -55,10 +60,10 @@ void Parser::ValidIp(std::string &ip)
     std::string part;
     std::istringstream ss(ip);
 
-    while (std::getline(ss, part, '.')) {
+    while (std::getline(ss, part, '.')) 
+	{
         parts.push_back(part);
     }
-
     if (parts.size() != 4) {
         std::cerr << ip << " is invalid: should contain 4 parts." << std::endl;
 		throw std::exception();
@@ -75,7 +80,7 @@ void Parser::ValidIp(std::string &ip)
         int num = std::atoi(it->c_str());
         if (num < 0 || num > 255) 
 		{
-            std::cout << ip << " is invalid: each part should be between 0 and 255." << std::endl;
+            std::cerr << ip << " is invalid: each part should be between 0 and 255." << std::endl;
 			throw std::exception();
         }
     }
@@ -107,13 +112,13 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 	{
     	ip = listen_info.substr(0, listen_info.find(":"));
 		port = listen_info.substr(listen_info.find(":") + 1);
-		port.pop_back();
+		port.erase(port.size() - 1);
  	} 
 	else 
 	{
     	ip = kAnyIpAddress;
 		port = listen_info;
-		port.pop_back();
+		port.erase(port.size() - 1);
 	}
 	ValidIp(ip);
 	ValidPort(port);
@@ -124,8 +129,7 @@ void Parser::ParseListen(ChildServer &serv, std::string &line)
 void Parser::ValidChildServerName(const std::string& str) {
     if (str.empty()) 
 	    throw std::runtime_error("error empty:" + str);
-
-    if (str.front() == '.' || str.back() == '.') 
+    if (str[0] == '.' || str[str.size() - 1] == '.') 
 		throw std::runtime_error("error dot in edge:" + str);
     for (size_t i = 0; i < str.length(); ++i)
 	{
@@ -186,10 +190,11 @@ void Parser::ParseErrorpage(ChildServer &serv, std::string &line)
 		body = body.substr(body.find(' ') + 1, body.size());
 	}
 	std::string page;
-	page = body.substr(0,body.size() - 1);
+	page = body.substr(0);
+	page.erase(page.size() - 1);
 	if (status_vec.empty())
 		throw std::runtime_error("ParseErrorpage status empty");
-	int i;
+	unsigned long i;
 	i = 0;
 	while (i < status_vec.size())
 	{
@@ -209,7 +214,7 @@ size_t Parser::max_stos(std::string &limit)
 	{
 		if (!(isdigit(limit[i])))
 			throw std::runtime_error("ParseCLMAX: Non digit");
-		count = count * 10 + count + (limit[i] - '0');
+		count = count * 10 + (limit[i] - '0');
 		i++;
 	}
 	if (i != limit.size())
@@ -221,7 +226,7 @@ void Parser::ParseCLMAX(ChildServer &serv, std::string &line)
 {
 	std::string limit;
 	limit = line.substr(line.find(' ')+ 1);
-	limit.pop_back();
+	limit.erase(limit.size() - 1);;
 	serv.set_request_max(max_stos(limit));
 }
 
@@ -229,13 +234,24 @@ void Parser::ParseRewrite(Location &loc, std::string &line)
 {
 	std::string original;
 	std::string late;
-
+	size_t i;
 	line = line.substr(line.find(' ')+ 1);
 	original = line.substr(0, line.find(' '));
 	late = line.substr(line.find(' ') + 1);
-	late.pop_back();
-	std::pair<std::string, std::string> pair(original, late);
+	late.erase(late.size() - 1);
+	i = max_stos(original);
+	if (i < 301 || (303 < i && i < 307) || 308 < i)
+		throw std::runtime_error("ParseCLMAX: Wrong Number Redirect");
+	std::pair<int, std::string> pair(i, late);
 	loc.setRedirection(pair);
+}
+
+static std::string EmitEmpty(std::string &original)
+{
+	size_t i =0;
+	while(original[i] ==' ')
+		i++;
+	return (original.substr(i));
 }
 
 
@@ -249,10 +265,14 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 	std::string red;
 	if (!std::getline(content_, red))
 		throw std::runtime_error("ParseLocation Error:'{}' is not found ");
+	red = EmitEmpty(red);
 	if (red != "{")
 		throw std::runtime_error("ParseLocation Error:'{' is not found" + red);
-	while (std::getline(content_, red) && red !=  "}")
+	while (std::getline(content_, red))
 	{
+		red = EmitEmpty(red);
+		if (red == "}")
+			break ;
 		std::string tmp;
 		if (check_syntax(red, "root ",true))
 		{
@@ -284,21 +304,10 @@ void Parser::ParseLocation(ChildServer &server, std::string &line)
 			tmp.erase(tmp.size() - 1);
 			loc.setUploadDirectory(tmp);
 		}
-		else if ( check_syntax(red, "client_max ",true))
-		{
-			tmp = red.substr(red.find(' ') + 1);
-			tmp.erase(tmp.size() - 1);
-			if (tmp.size() > 7)
-				throw  std::runtime_error("ParseLocation Error:';' too large client_max " + red);
-			std::stringstream ss(tmp);
-			size_t i;
-			ss >> i;
-			loc.setClientMaxBodySize(i);
-		}
+		else
+			throw std::runtime_error("ParseLocation Error:unkown word is found");
 		// we have to add cgi infomation;
 		// else if ()
-		else
-			std::runtime_error("ParseLocation Error:unkown word is found");
 	}
 	if (red != "}")
 		throw std::runtime_error("ParseLocation Error:'}' is not found ");
@@ -310,10 +319,12 @@ void Parser::MakeChildServer(Config &conf)
 	ChildServer serv;
 	std::string line;
 
+	serv.set_request_max(req_max_body_size);
 	if (!(std::getline(content_, line) && line =="{"))
 		throw std::exception();
 	while(std::getline(content_, line) && line !=  "}")
 	{
+		line = EmitEmpty(line);
 		if (check_syntax(line, "listen ",true))
 			ParseListen(serv, line);
 		else if (check_syntax(line, "server_name ", true))

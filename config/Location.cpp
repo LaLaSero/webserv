@@ -6,13 +6,13 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:53 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/26 17:55:03 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Location.hpp"
 
-Location::Location() :  directory_listing_(false), client_max_body_size_(0) {}
+Location::Location() :  directory_listing_(false){}
 
 std::string Location::getPath() const {
     return path_;
@@ -22,7 +22,7 @@ std::vector<std::string> Location::getAcceptedMethods() const {
     return accepted_methods_;
 }
 
-std::pair<std::string, std::string> Location::getRedirection() const {
+std::pair<int, std::string> Location::getRedirection() const {
     return redirection_;
 }
 
@@ -46,9 +46,6 @@ std::string Location::getUploadDirectory() const {
     return upload_directory_;
 }
 
-size_t Location::getClientMaxBodySize() const {
-    return client_max_body_size_;
-}
 
 // Setter
 void Location::setPath(const std::string &path) {
@@ -59,7 +56,7 @@ void Location::setAcceptedMethods(const std::vector<std::string> &methods) {
     accepted_methods_ = methods;
 }
 
-void Location::setRedirection(const std::pair<std::string, std::string> &redirection) 
+void Location::setRedirection(const std::pair<int, std::string> &redirection) 
 {
     redirection_ = redirection;
 }
@@ -84,11 +81,28 @@ void Location::setUploadDirectory(const std::string &uploadDirectory) {
     upload_directory_ = uploadDirectory;
 }
 
-void Location::setClientMaxBodySize(size_t maxSize) {
-    client_max_body_size_ = maxSize;
-}
-
 void Location::add_Acceptedmethods(const std::string tmp)
 {
 	accepted_methods_.push_back(tmp);
+}
+
+Location& Location::operator=(const Location& other)
+{
+    // 自分自身に代入しないようにチェック
+    if (this == &other) {
+        return *this;  // 同一オブジェクトに対する代入は何もしない
+    }
+
+    // メンバー変数のコピー
+    path_ = other.path_;
+    accepted_methods_ = other.accepted_methods_;
+    root_directory_ = other.root_directory_;
+    directory_listing_ = other.directory_listing_;
+    redirection_ = other.redirection_;
+    default_file_ = other.default_file_;
+    upload_directory_ = other.upload_directory_;
+    cgi_extension_ = other.cgi_extension_;
+
+    // コピーしたオブジェクト自身を返す
+    return *this;
 }

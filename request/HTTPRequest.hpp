@@ -5,6 +5,9 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include "../config/ChildServer.hpp"
+#include "../config/Location.hpp"
+
 
 class HTTPRequest
 {
@@ -18,10 +21,10 @@ class HTTPRequest
 		std::string _port;
 		std::map<std::string, std::string> _headers;
 		std::string _body;
-		std::string _location;
+		// std::string _location;
+		Location _location;
 
 		int _mode;
-
 
 	public:
 		HTTPRequest();
@@ -48,8 +51,8 @@ class HTTPRequest
 		const std::string& getPort() const;
 		void setPort(const std::string& port);
 
-		const std::string& getLocation() const;
-		void setLocation(const std::string& location);
+		const Location& getLocation() const;
+		void setLocation(const std::string& path);
 
 		int getMode() const;
 		void setMode(int mode);

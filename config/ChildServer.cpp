@@ -12,6 +12,9 @@
 
 #include"ChildServer.hpp"
 
+ChildServer::ChildServer():reqbody_size_(req_max_body_size)
+{
+}
 
 
 std::string ChildServer::get_listen_ip_() const 
@@ -22,6 +25,24 @@ std::string ChildServer::get_listen_ip_() const
 std::string ChildServer::get_listen_port_() const 
 {
     return listen_port_;
+}
+
+// Getter メソッドの実装
+const std::set<std::string>& ChildServer::get_server_names() const {
+    return server_names_;
+}
+
+const std::map<int, std::string>& ChildServer::get_error_page() const {
+    return error_page_;
+}
+
+size_t ChildServer::get_request_max() const {
+    return reqbody_size_;
+}
+
+
+const std::vector<Location>& ChildServer::getLocations() const {
+    return locations_;
 }
 
 void ChildServer::set_listen_ip_(const std::string& listen_ip) {

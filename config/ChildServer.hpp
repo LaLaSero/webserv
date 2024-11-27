@@ -35,8 +35,13 @@ class ChildServer
 		size_t		reqbody_size_;
 		std::vector<Location>	locations_;
 	public:
+		ChildServer();
 		std::string get_listen_ip_() const;
 		std::string get_listen_port_() const;
+    	const std::set<std::string>& get_server_names() const; // 新しい getter
+    	const std::map<int, std::string>& get_error_page() const; // 新しい getter
+    	size_t get_request_max() const; // 新しい getter
+		const std::vector<Location>& getLocations() const;
     	void set_listen_ip_(const std::string& listen_ip);
     	void set_listen_port_(const std::string& listen_port);
 		void add_server_names_(const std::string& server_name);

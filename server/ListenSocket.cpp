@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/27 15:02:19 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/10/27 15:57:26 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/22 16:53:04 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,22 @@
 
 ListenSocket::ListenSocket(int fd, const SocketAddress &server_addr, const Config &config)
     : Socket(fd, server_addr, config) {}
-// // 新しい接続要求を受け付けるメソッド
-// Result<ConnSocket *> ListenSocket::AcceptNewConnection() {
-//     // 接続要求を処理するロジックを実装する必要があります
-//     return nullptr; // ダミー値
-// }
+
+
+ClientSocket *ListenSocket::AcceptNewConnection() 
+{
+  struct sockaddr_storage client_addr;
+  socklen_t addrlen = sizeof(struct sockaddr_storage);
+  // std::cout << fd_  << std::endl;
+  int conn_fd = accept4(fd_, (struct sockaddr *)&client_addr, &addrlen,
+                        SOCK_NONBLOCK | SOCK_CLOEXEC);
+  if (conn_fd < 0) 
+  {
+    perror("accept4");
+    throw std::exception();
+  }
+  ClientSocket *conn_sock = new ClientSocket(
+      conn_fd, server_addr_,
+      SocketAddress((const struct sockaddr *)&client_addr, addrlen), config_, fd_);
+  return conn_sock;
+}

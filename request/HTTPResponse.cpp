@@ -1,10 +1,14 @@
 #include "HTTPResponse.hpp"
+#include "../server/ServerException.hpp"
+#include "../config/Location.hpp"
 
-HTTPResponse::HTTPResponse()
-	: _version("HTTP/1.1")
+HTTPResponse::HTTPResponse(const Config& _config)
+	: _config(_config)
+	, _version("HTTP/1.1")
 	, _keepAlive(true)
 	, _body("")
 	, _statusCode(STATUS_200)
+	,_server(NULL)
 {
 	setStatusMessageMap();
 }
@@ -19,6 +23,7 @@ void HTTPResponse::clear()
 	_headers.clear();
 	_keepAlive = true;
 	_body.clear();
+	message.clear();
 }
 
 std::string HTTPResponse::getCurrentTime()
@@ -30,6 +35,16 @@ std::string HTTPResponse::getCurrentTime()
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", now_tm);
 
 	return std::string(buffer);
+}
+
+void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::string& reasonPhrase, const std::string& message)
+{
+	_statusCode = statusCode;
+	_statusMessage = reasonPhrase;
+	_body = "<html><head><title>" + std::to_string(statusCode) + " " + reasonPhrase + "</title></head>"
+			"<body><h1>" + std::to_string(statusCode) + " " + reasonPhrase + "</h1>"
+			"<p>" + message + "</p></body></html>";
+	makeMessage();
 }
 
 
@@ -67,37 +82,7 @@ void HTTPResponse::makeMessage()
 		message += _body + "\r\n";
 }
 
-void HTTPResponse::handleNormalRequest(HTTPRequest& request)
-{
-	std::string method = request.getMethod();
-	if (method == "GET")
-	{
-		// GETリクエストの処理
-		makeBodyGET(request);
-	}
-	else if (method == "POST")
-	{
-		// POSTリクエストの処理
-		makeBodyPOST(request);
-	}
-	else if (method == "DELETE")
-	{
-		// DELETEリクエストの処理
-		makeBodyDELETE(request);
-	}
-	else
-	{
-		// 未対応のメソッド
-		std::cerr << "Unsupported method: " << method << std::endl;
-		_statusCode = STATUS_501;
-	}
-	makeMessage();
-	_keepAlive = request.getHeader("Connection") == "keep-alive";
-	std::cout << message << std::endl;
-
-}
-
-bool HTTPResponse::isGCIRequest(HTTPRequest& request)
+bool HTTPResponse::isCGIRequest(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 	if (uri.find("/cgi-bin/") == 0)
@@ -117,24 +102,44 @@ bool HTTPResponse::isRedirectRequest(HTTPRequest& request)
 	return false;
 }
 
-void HTTPResponse::handleCGIRequest(HTTPRequest& request)
+bool HTTPResponse::isAutoIndex(HTTPRequest& request)
 {
-	(void)request;
-	// CGIの処理
+	// リクエストのURIを取得
+	std::string uri = request.getUri();
+
+	// ConfigからChildServerを取得
+	const std::vector<ChildServer>& servers = _config.getchildserver();
+
+	// 範囲ベースのforループをイテレータに置き換え
+	std::vector<ChildServer>::const_iterator serverIt;
+	for (serverIt = servers.begin(); serverIt != servers.end(); ++serverIt)
+	{
+		// 各サーバー内のLocationを探索
+		const std::vector<Location>& locations = serverIt->getLocations();
+
+		std::vector<Location>::const_iterator locationIt;
+		for (locationIt = locations.begin(); locationIt != locations.end(); ++locationIt)
+		{
+			// URIがLocationのパスに一致するか確認
+			if (uri.find(locationIt->getPath()) == 0) // 完全一致でも良い場合、修正する
+			{
+				// autoIndexの設定を確認
+				return locationIt->isDirectoryListing();
+			}
+		}
+	}
+
+	// 一致するLocationが見つからなかった場合、falseを返す
+	return false;
 }
 
-void HTTPResponse::handleRedirectRequest(HTTPRequest& request)
-{
-	(void)request;
-	// リダイレクトの処理
-}
 
 // CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
 void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 
-	if (isGCIRequest(request))
+	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
 		handleCGIRequest(request);
@@ -147,7 +152,28 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 	else
 	{
 		request.setMode(NORMAL_RESPONSE);
-		handleNormalRequest(request);
+		if (isAutoIndex(request))
+		{
+			// 自動インデックスの処理
+			handleAutoIndex(request);
+		}
+		else
+		{
+			handleNormalRequest(request);
+		}
 	}
 
+}
+
+
+std::string HTTPResponse::intToString(int number) const
+{
+	std::stringstream ss;
+	ss << number;
+	return ss.str();
+}
+
+void HTTPResponse::SetChildServer(const ChildServer *cs)
+{
+	_server = cs;
 }

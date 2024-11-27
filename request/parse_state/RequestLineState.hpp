@@ -6,7 +6,8 @@
 class RequestLineState : public IParseState
 {
 	public:
-		IParseState* handle(ParseRequest& parser, std::stringstream& ss);
+		virtual ~RequestLineState() = default;
+		IParseState* handle(ParseRequest& parser, std::stringstream& ss) override;
 };
 
 #endif
