@@ -6,7 +6,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 NAME = test
 
 # ソースファイルとオブジェクトファイル
-SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp Location.cpp ../server/EpollAdm.cpp ../server/SocketAddress.cpp ../server/Socket.cpp ../server/ListenSocket.cpp ../server/ClientSocket.cpp
+SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp ../config/Location.cpp ../server/EpollAdm.cpp ../server/SocketAddress.cpp ../server/Socket.cpp ../server/ListenSocket.cpp ../server/ClientSocket.cpp ../request/HTTPRequest.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # デフォルトターゲット
