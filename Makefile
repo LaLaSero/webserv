@@ -33,7 +33,9 @@ SRCS = main.cpp \
        request/parse_state/RequestLineState.cpp \
        request/parse_state/HeadersState.cpp \
        request/parse_state/FinishState.cpp \
-       request/parse_state/BodyState.cpp
+       request/parse_state/BodyState.cpp \
+       cgi/CgiHandler.cpp \
+       cgi/CgiResponse.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
