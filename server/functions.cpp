@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/26 15:17:59 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/29 19:15:50 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,15 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
   fde->state = 0;
   return (fde);
 }
+
+
+// std::string make_parse_error_response(int i)
+// {
+//   if (i == errorno_notsup)
+//   {
+//     return ();
+//   }
+// }
 
 void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {

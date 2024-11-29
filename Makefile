@@ -26,6 +26,7 @@ SRCS = main.cpp \
        request/HTTPResponseDELETE.cpp \
        request/HTTPResponseGET.cpp \
        request/HTTPResponsePOST.cpp \
+       request/HTTPResponseError.cpp \
        request/ParseRequest.cpp \
        request/HTTPStatusMessage.cpp \
        request/HTTPResponse.cpp\

@@ -5,6 +5,8 @@
 
 class RequestLineState : public IParseState
 {
+	private:
+		int errorno_;
 	public:
 		virtual ~RequestLineState() = default;
 		IParseState* handle(ParseRequest& parser, std::stringstream& ss) override;

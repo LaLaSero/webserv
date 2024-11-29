@@ -59,18 +59,30 @@ bool ParseRequest::readRequestLine(std::stringstream &ss)
 		return false;
 	}
 	if (line.empty()) {
-		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
+		this->_request.set_errorno_(errorno_badreq);
+		return false;
 	}
 	std::vector<std::string> request_line = split(line, ' ');
 	if (countSpace(line) != 2)
-		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
+	{
+		this->_request.set_errorno_(errorno_badreq);
+		return false;
+	}
 	if (request_line.size() != 3)
-		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
+	{
+		this->_request.set_errorno_(errorno_badreq);
+		return false;
+	}
 	if (request_line[2] != "HTTP/1.1")
-		throw ServerException(HTTP_HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
+	{
+		this->_request.set_errorno_(errorno_notsup);
+		return false;
+	}
 	if (request_line[1][0] != '/' || request_line[1].find("/../") != std::string::npos)
-		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-
+	{
+		this->_request.set_errorno_(errorno_badreq);
+		return false;
+	}
 	_request.setMethod(request_line[0]);
 	_request.setUri(request_line[1]);
 	_request.setVersion(request_line[2]);

@@ -49,6 +49,7 @@ class HTTPResponse
 		void makeBodyGET(HTTPRequest& request);
 		void makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
+		void makeBodyError(HTTPRequest& request);
 
 		bool isCGIRequest(HTTPRequest& request);
 		void handleCGIRequest(HTTPRequest& request);
