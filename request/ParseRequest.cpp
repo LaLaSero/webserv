@@ -66,8 +66,6 @@ bool ParseRequest::readRequestLine(std::stringstream &ss)
 		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
 	if (request_line.size() != 3)
 		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
-	if (request_line[0] != "GET" && request_line[0] != "POST" && request_line[0] != "DELETE")
-		throw ServerException(HTTP_NOT_IMPLEMENTED, "Not Implemented");
 	if (request_line[2] != "HTTP/1.1")
 		throw ServerException(HTTP_HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 	if (request_line[1][0] != '/' || request_line[1].find("/../") != std::string::npos)
