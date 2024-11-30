@@ -5,7 +5,7 @@ CgiHandler::CgiHandler(HTTPRequest &request) : request_(request)
 	env_vars_["REQUEST_METHOD"] = request_.getMethod();
 	env_vars_["REQUEST_METHOD"] = "GET"; //for test
 	env_vars_["QUERY_STRING"] = request_.getQuery();
-	env_vars_["QUERY_STRING"] = "type=document-response"; //for test
+	env_vars_["QUERY_STRING"] = "type=local-redir-response"; //for test
 	env_vars_["SCRIPT_NAME"] = request_.getUri(); 
 	env_vars_["CONTENT_TYPE"] = "test";
 	env_vars_["CONTENT_LENGTH"] = request_.getBody().size();
@@ -25,9 +25,20 @@ void CgiHandler::setRequestBody(const std::string &body)
 	request_body_ = body;
 }
 
-std::string CgiHandler::ExecuteCGI()
+bool CgiHandler::is_valid_root_and_executer_cgi()
+{
+	// CGIのディレクトリパスやインタプリタがconfigから設定されているかを確認
+	return true;
+}
+
+bool CgiHandler::ExecuteCGI(std::string &response)
 {
 	int input_pipe[2], output_pipe[2];
+
+	if (!is_valid_root_and_executer_cgi())
+	{
+		return "403 Forbidden";
+	}
 	if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
 	{
 		perror("pipe");
@@ -62,6 +73,11 @@ std::string CgiHandler::ExecuteCGI()
 
 		std::string script_path = env_vars_["SCRIPT_NAME"];
 		std::string python_path = "python3";
+		
+		python_path = "/usr/bin/python3";
+		script_path = "./test.py";
+		chdir("../cgi-bin");
+
 		char *argv[] = {const_cast<char *>(python_path.c_str()), 
 						const_cast<char *>(script_path.c_str()),
 						NULL};
@@ -98,13 +114,16 @@ std::string CgiHandler::ExecuteCGI()
 		int status;
 		
 		waitpid(pid, &status, 0);
+
+		bool local_redirect_flag = 0;
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
-			return  ParseCGIResponse(cgi_response); // responseの作成
+			response = ParseCGIResponse(cgi_response, local_redirect_flag); // responseの作成
 		}
 		else
 		{
-			return "500 Internal Server Error";
+			response = "500 Internal Server Error";
 		}
+		return local_redirect_flag;
 	}
 }

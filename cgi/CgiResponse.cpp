@@ -36,31 +36,33 @@ HeaderMap ParseHeaders(const std::string &header_string)
 
 std::string DetermineResponseType(const HeaderMap &headers, const std::string &body)
 {
+	std::string response_type = "document-response";
+
 	if (headers.find("Location") != headers.end())
 	{
-		if (!body.empty())
+		if (headers.at("Location").find("http://") != std::string::npos)
 		{
-			return "client-redirdoc-response";
+			response_type = "client-redir-response";
 		}
 		else
 		{
-			return "client-redir-response";
+			response_type = "local-redir-response";
 		}
 	}
-	else if (headers.empty())
+
+	if (response_type == "client-redir-response" && !body.empty())
 	{
-		return "local-redir-response";
+		response_type = "client-redirdoc-response";
 	}
-	else
-	{
-		return "document-response";
-	}
+
+	return response_type;
 }
 
-std::string ParseCGIResponse(const std::string &response)
+std::string ParseCGIResponse(const std::string &response, bool &local_redirect_flag)
 {
 	std::string result = "";
 
+	local_redirect_flag = 0;
 	size_t header_end = response.find("\r\n\r\n");
 	if (header_end == std::string::npos)
 	{
@@ -76,24 +78,37 @@ std::string ParseCGIResponse(const std::string &response)
 
 	if (response_type == "document-response")
 	{
-		result = "Document Response detected.\n";
+		result = "Document Response detected.\n";// for debug
+		result += "Status: " + headers["Status"] + "200 OK" + "\n";
 		result += "Content-Type: " + headers["Content-Type"] + "\n";
 		result += "Body: " + body_part + "\n";
 	}
 	else if (response_type == "local-redir-response")
 	{
-		result = "Local Redirect Response detected.\n";
+		result = "Local Redirect Response detected.\n";// for debug
+
+		std::string location = headers["Location"];
+		if (location.empty())
+		{
+			result += "Location header not found.\n";
+		}
+		else
+		{
+			result += "Location: " + location + "\n";
+			local_redirect_flag = 1;
+		}
 	}
 	else if (response_type == "client-redir-response")
 	{
-		result = "Client Redirect Response detected.\n";
+		result = "Client Redirect Response detected.\n";// for debug
 		result += "Location: " + headers["Location"] + "\n";
 	}
 	else if (response_type == "client-redirdoc-response")
 	{
-		result = "Client Redirect with Document Response detected.\n";
+		result = "Client Redirect with Document Response detected.\n";// for debug
 		result += "Location: " + headers["Location"] + "\n";
 		result += "Body: " + body_part + "\n";
+
 	}
 	else
 	{
