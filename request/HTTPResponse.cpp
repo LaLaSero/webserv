@@ -1,6 +1,7 @@
 #include "HTTPResponse.hpp"
 #include "../server/ServerException.hpp"
 #include "../config/Location.hpp"
+#include <sstream>
 
 HTTPResponse::HTTPResponse(const Config& _config)
 	: _config(_config)
@@ -40,9 +41,11 @@ void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::s
 {
 	_statusCode = statusCode;
 	_statusMessage = reasonPhrase;
-	_body = "<html><head><title>" + std::to_string(statusCode) + " " + reasonPhrase + "</title></head>"
-			"<body><h1>" + std::to_string(statusCode) + " " + reasonPhrase + "</h1>"
-			"<p>" + message + "</p></body></html>";
+	std::stringstream ss;
+	ss << "<html><head><title>" << statusCode << " " + reasonPhrase << "</title></head>"
+			"<body><h1>" << statusCode << " " << reasonPhrase << "</h1>"
+			"<p>" << message << "</p></body></html>";
+	_body = ss.str();
 	makeMessage();
 }
 
@@ -59,7 +62,10 @@ void HTTPResponse::setHeader(const std::string& key, const std::string& value)
 
 void HTTPResponse::setStatusline()
 {
-	_statusLine = _version + " " + std::to_string(_statusCode) + " " + _statusMessageMap[_statusCode] + "\r\n";
+	std::stringstream ss;
+
+	ss  << _version << " " << _statusCode << " " << _statusMessageMap[_statusCode] << "\r\n";
+	_statusLine = ss.str();
 }
 
 void HTTPResponse::makeMessage()
@@ -73,7 +79,9 @@ void HTTPResponse::makeMessage()
 	setHeader("Date", getCurrentTime());
 	setHeader("Server", SERVER_NAME);
 	setHeader("Content-Type", "text/html");
-	setHeader("Content-Length", std::to_string(_body.size()));
+	std::stringstream ss;
+	ss << _body.size();
+	setHeader("Content-Length", ss.str());
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 		message += it->first + ": " + it->second + "\r\n";
 	message += "\r\n";

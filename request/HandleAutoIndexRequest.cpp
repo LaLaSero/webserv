@@ -29,15 +29,16 @@ bool HTTPResponse::isDirectoryRequest(HTTPRequest& request)
 
 bool HTTPResponse::hasTrailingSlash(const std::string& uri) const
 {
-	return !uri.empty() && uri.back() == '/';
+	return !uri.empty() && uri[uri.size() - 1] == '/';
 }
 
 void HTTPResponse::redirectToTrailingSlash(const HTTPRequest& request)
 {
 	std::string uri = request.getUri();
-	if (uri.back() != '/') {
-		uri += "/";
-	}
+    if (!uri.empty() && uri[uri.size() - 1] != '/')
+    {
+    uri += "/";
+    }
 	_statusCode = STATUS_301;
 	_headers["Location"] = uri;
 	_body = "<html><head><title>301 Moved Permanently</title></head>"

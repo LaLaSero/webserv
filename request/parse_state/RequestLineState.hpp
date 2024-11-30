@@ -5,7 +5,10 @@
 
 class RequestLineState : public IParseState
 {
+	private:
+		int errorno_;
 	public:
+		virtual ~RequestLineState() {};
 		IParseState* handle(ParseRequest& parser, std::stringstream& ss);
 };
 

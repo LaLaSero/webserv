@@ -220,7 +220,7 @@ void ParseRequest::searchLocation()
 		return;
 	}
 	std::vector<std::string> uri_split = split(uri, '/');
-	if (uri_split.size() < 2 && uri.back() != '/') {
+	if (uri_split.size() < 2 && (!uri.empty() && uri[uri.size() - 1] != '/')) {
 		_request.setLocation("/");
 		return;
 	}

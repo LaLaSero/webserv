@@ -3,7 +3,9 @@
 
 #include <exception>
 #include <string>
-#include <unordered_map>
+// #include <unordered_map>
+#include <sstream>
+#include <map>
 
 #define HTTP_OK 200
 #define HTTP_BAD_REQUEST 400
@@ -18,9 +20,12 @@
 class ServerException : public std::exception 
 {
 	public:
-		ServerException(int statusCode, const std::string& message): _statusCode(statusCode), _message(message)
+		ServerException(int statusCode, const std::string& message)
+			: _statusCode(statusCode), _message(message)
 		{
-			_fullMessage = "HTTP Error " + std::to_string(_statusCode) + ": " + _message;
+			std::stringstream ss;
+			ss << "HTTP Error " << _statusCode << ": " << _message;
+			_fullMessage = ss.str();
 		}
 
 		virtual ~ServerException() throw() {}
@@ -35,7 +40,7 @@ class ServerException : public std::exception
 			return _message;
 		}
 
-		const std::unordered_map<std::string, std::string>& getHeaders() const
+		const std::map<std::string, std::string>& getHeaders() const
 		{
 			return _headers;
 		}
@@ -52,7 +57,8 @@ class ServerException : public std::exception
 		int _statusCode;
 		std::string _message;
 		std::string _fullMessage;
-		std::unordered_map<std::string, std::string> _headers;
+		// std::unordered_map<std::string, std::string> _headers;
+		std::map<std::string, std::string> _headers;
 
 };
 

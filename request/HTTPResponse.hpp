@@ -69,6 +69,7 @@ class HTTPResponse
 		std::string intToString(int number) const;
 
 	private:
+		const Config&	_config;
 		std::string		_version;
 		std::string		_statusMessage;
 		std::string		_statusLine;
@@ -79,7 +80,6 @@ class HTTPResponse
 
 		HTTPStatusCode	_statusCode;
 
-		const Config&	_config;
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;
