@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:38:42 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/17 19:04:52 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/30 15:24:51 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,4 +43,6 @@ void AwakeFdEvent(FdEvent *fde, unsigned int events, EpollAdm *epoll);
 
 // ループ処理
 void Loop(EpollAdm &epoll);
+
+#define BUF_SIZE 1024
 

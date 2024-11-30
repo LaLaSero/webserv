@@ -72,6 +72,7 @@ class HTTPRequest
 		HTTPRequest &getRequest() const;
 		int get_errorno_(void) const ;
 		void set_errorno_(const int i);
+        size_t getContentLength() const;
 };
 
 #define errorno_badreq 1

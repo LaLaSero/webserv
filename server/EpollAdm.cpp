@@ -35,7 +35,8 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
     events |= kFdeRead;
   if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) 
     events |= kFdeWrite;
-  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) 
+  {
     if (epev.events & EPOLLERR)
         throw std::exception();
     if (epev.events & EPOLLHUP)
@@ -141,7 +142,10 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
     for (int i = 0; i < event_num; ++i) 
     {
         if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end())
+        {
+          //epoll wait detectes non_registerd_fd_events
             throw std::runtime_error("Error occurred in Wait event");
+        }
         FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
         // FdandEventの作成と追加
         FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定

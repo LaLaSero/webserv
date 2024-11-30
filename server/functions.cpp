@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/29 19:15:50 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/30 20:26:45 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,52 +126,74 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 //   }
 // }
 
+void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
+{
+  
+}
+
+
+bool Overread(ClientSocket *socket) {
+    unsigned char buf[BUF_SIZE];
+    int conn_fd = socket->GetFd();
+    
+    // データを読み取る
+    int n = read(conn_fd, buf, sizeof(buf) - 1);
+    
+    // 読み込み失敗または接続切断時の処理
+    if (n <= 0) 
+    {  // EOF (TCP flag FIN) or Error
+        socket->SetIsShutdown(true);
+        return true;
+    }
+    // 読み取ったデータをクライアントソケットのバッファに追加
+    return false;
+}
+
+bool isfinish()
+{
+  return (true);
+}
+
+
+
 void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
     ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
+    bool should_close_client = false;
 
     // 読み込みイベントの処理
     if (events & kFdeRead) 
     {
-        std::cout << "start reading" << std::endl;
-        std::cout << client_sock->get_server_fd() << std::endl;
-        char buffer[1024];
-        ssize_t readsize = read(fde->fd, buffer, sizeof(buffer));
-        if (readsize == -1) 
-        {
-            perror("read failed");
-            close(fde->fd);
-            epoll->delete_event(fde);
-            delete fde;
-            delete client_sock;
-            //read失敗時の挙動今とりあえずリターンしている
-            return;
-        }
-        // クライアントが接続を切断した場合、今とりあえずほぼ同じ
-        if (readsize == 0) 
-        {
-            close(fde->fd);
-            epoll->delete_event(fde);
-            delete fde;
-            delete client_sock;
-            return;
-        }
-        // buffer[readsize] = '\0'; // null終端を追加
-        // std::string request(buffer); // 読み込んだデータを文字列に変換
-        std::cout <<":::" << buffer << ":::" << std::endl;
-        // 読み込んだデータを処理する（例: HTTPリクエスト解析）
-        // ここでリクエストに応じたレスポンスを作成
-	      HTTPRequest request;
-	      ParseRequest parser_request(request);
-        ChildServer Server =epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
-        
-		    parser_request.parse(buffer);
+      std::cout << "start reading" << std::endl;
+      std::cout << client_sock->get_server_fd() << std::endl;
+      char buf[BUF_SIZE];
+      int conn_fd = client_sock->GetFd();
+      ssize_t n = read(conn_fd, buf, sizeof(buf) - 1);
+      buf[n]= '\0';
+      std::cout << buf << std::endl;
+      if (n <= 0) 
+      {  // EOF (TCP flag FIN) or Error
+        client_sock->SetIsShutdown(true);
+        should_close_client = true;
+      }
+      ChildServer Server =epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
+      HTTPRequest request;
+      ParseRequest parser_request(request);
+	    parser_request.parse(buf);
+      //connect end 
+      if (should_close_client || (request.getContentLength() > 0 &&request.getBody().size() >= request.getContentLength()))
+      {
 	      HTTPResponse response(epoll->get_config());
         response.SetChildServer(&Server);
         response.selectResponseMode(request);
+        if (request.getMode() == 2)
+        {
+          throw std::runtime_error("cgi response");
+        }
         std::string res = response.makeBodyResponse();
         client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
         epoll->GotoNextEvent(fde, kFdeWrite);// 書き込み準備ができたら書き込みイベントを監視
+      }
     }
     // 書き込みイベントの処理
     if (events & kFdeWrite) 
@@ -195,8 +217,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         delete client_sock;
     }
 
-    // エラーイベントの処理
-    if (events & kFdeError) {
+    if (events & kFdeError) 
+    {
         std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
         close(fde->fd);
         epoll->delete_event(fde);
@@ -208,20 +230,16 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
-    // std::cout <<"HandleListen called" << std::endl;
-    // ListenSocketを取得
-    (void)fde;
-    ListenSocket *listen_sock = reinterpret_cast<ListenSocket *>(data);
-    if (events & kFdeRead)
-    { 
-      // 新しいクライアント接続を受け入れる
-      ClientSocket *result = listen_sock->AcceptNewConnection();
-      FdEvent *client_fde = CreateFdEvent(result->GetFd(),  HandleClientSocketEvent, result);
-      // epollに新しいクライアント接続を監視対象として登録
-      epoll->register_event(client_fde);
-      epoll->Add(client_fde, kFdeRead); // 読み込みイベントを監視
-    }
-  if (events & kFdeError) 
+  (void)fde;
+  ListenSocket *listen_sock = reinterpret_cast<ListenSocket *>(data);
+  if (events & kFdeRead)
+  {
+    ClientSocket *result = listen_sock->AcceptNewConnection();
+    FdEvent *client_fde = CreateFdEvent(result->GetFd(),  HandleClientSocketEvent, result);
+    epoll->register_event(client_fde);
+    epoll->Add(client_fde, kFdeRead);
+  }
+  if (events & kFdeError)
     throw std::runtime_error("Errorrrrrr");
 }
 

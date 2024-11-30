@@ -146,7 +146,7 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
-		handleCGIRequest(request);
+		// handleCGIRequest(request);
 	}
 	else if (isRedirectRequest(request))
 	{
@@ -181,4 +181,3 @@ void HTTPResponse::SetChildServer(const ChildServer *cs)
 {
 	_server = cs;
 }
-
