@@ -29,7 +29,6 @@ class ParseRequest
 
 		bool isFinished() const;
 		void setFinished(bool finished);
-
 	private:
 		HTTPRequest &_request;
 		bool _isChunked;
@@ -52,5 +51,6 @@ class ParseRequest
 
 		bool _isFinished;
 };
+
 
 #endif

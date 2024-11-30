@@ -1,7 +1,7 @@
 #include "HTTPRequest.hpp"
 
 HTTPRequest::HTTPRequest()
-	: _method(""), _uri(""), _version(""), _path(""), _query(""), _host(""), _port("80"), _body(""), _location(), _mode(0)
+	: _method(""), _uri(""), _version(""), _path(""), _query(""), _host(""), _port("80"), _body(""), _location(), _mode(0),errorno_(0)
 {
 }
 
@@ -170,4 +170,15 @@ void HTTPRequest::print() const
 		std::cout << "  " << it->first << ": " << it->second << std::endl;
 	}
 	std::cout << "Body: " << _body << std::endl;
+}
+
+int HTTPRequest::get_errorno_() const 
+{
+    return errorno_;
+}
+
+// set_errorno_ メソッドの実装
+void  HTTPRequest::set_errorno_(const int i) 
+{
+    errorno_ = i; 
 }

@@ -1,17 +1,17 @@
 # コンパイラとフラグ
 CXX = c++
-# CXXFLAGS = -Wall -Wextra -Werror
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 # 出力ファイル名
 NAME = test
 
 # ソースファイルとオブジェクトファイル
-SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp Location.cpp ../server/EpollAdm.cpp ../server/SocketAddress.cpp ../server/Socket.cpp ../server/ListenSocket.cpp ../server/ClientSocket.cpp
+SRCS = main.cpp Config.cpp ChildServer.cpp Parser.cpp ../config/Location.cpp ../server/EpollAdm.cpp ../server/SocketAddress.cpp ../server/Socket.cpp ../server/ListenSocket.cpp ../server/ClientSocket.cpp ../request/HTTPRequest.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # デフォルトターゲット
 all: $(NAME)
-
+	echo $(info $(CXX) $(CXXFLAGS) $(SRCS))
 # リンクして実行ファイルを作成
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)

@@ -6,6 +6,7 @@
 #include "HTTPStatusCode.hpp"
 #include <ctime>
 #include <cstdio>
+#include <dirent.h>
 #include "../config/Config.hpp"
 
 #ifndef SERVER_NAME
@@ -16,6 +17,11 @@
 #define REDIRECT_RESPONSE 1
 #define CGI_RESPONSE 2
 
+struct FileInfo {
+    std::string name;
+    off_t size;              // ファイルのサイズ
+    time_t mtime;            // 最終更新日時
+};
 
 class HTTPResponse
 {
@@ -43,6 +49,7 @@ class HTTPResponse
 		void makeBodyGET(HTTPRequest& request);
 		void makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
+		void makeBodyError(HTTPRequest& request);
 
 		bool isCGIRequest(HTTPRequest& request);
 		void handleCGIRequest(HTTPRequest& request);
@@ -61,13 +68,17 @@ class HTTPResponse
 		bool indexFileExist(HTTPRequest& request);
 		bool isAutoIndexEnabled(HTTPRequest& request);
 
-		std::vector<std::string> readDirectoryContents(std::string path);
-		std::string generateAutoIndexHTML(std::vector<std::string> fileList, std::string uri);
+		std::vector<FileInfo> readDirectoryContents(std::string path);
+		std::string generateAutoIndexHTML(const std::vector<FileInfo>& fileList, const std::string& uri);
 		void serveAutoIndex(std::string htmlContent, HTTPRequest& request);
 		std::string mapUriToPath(std::string uri);
 
 		std::string intToString(int number) const;
-
+		//ryanagit original
+		std::string makeBodyResponse();
+		std::string getStatusMessage();
+		void setHeadersContentType(std::string& true_path);
+		void SetChildServer(const ChildServer *loc);
 	private:
 		const Config&	_config;
 		std::string		_version;
@@ -80,6 +91,8 @@ class HTTPResponse
 
 		HTTPStatusCode	_statusCode;
 
+
+		const ChildServer *_server;
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;

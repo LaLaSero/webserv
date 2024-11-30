@@ -9,6 +9,7 @@ HTTPResponse::HTTPResponse(const Config& _config)
 	, _keepAlive(true)
 	, _body("")
 	, _statusCode(STATUS_200)
+	,_server(NULL)
 {
 	setStatusMessageMap();
 }
@@ -146,6 +147,10 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 
+	if (request.get_errorno_() != 0)
+	{
+		makeBodyError(request);
+	}
 	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
@@ -179,3 +184,9 @@ std::string HTTPResponse::intToString(int number) const
 	ss << number;
 	return ss.str();
 }
+
+void HTTPResponse::SetChildServer(const ChildServer *cs)
+{
+	_server = cs;
+}
+
