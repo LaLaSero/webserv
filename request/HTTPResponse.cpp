@@ -139,6 +139,10 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 
+	if (request.get_errorno_() != 0)
+	{
+		makeBodyError(request);
+	}
 	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
@@ -177,3 +181,4 @@ void HTTPResponse::SetChildServer(const ChildServer *cs)
 {
 	_server = cs;
 }
+

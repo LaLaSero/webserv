@@ -25,7 +25,7 @@ class HTTPRequest
 		Location _location;
 
 		int _mode;
-
+		int errorno_;
 	public:
 		HTTPRequest();
 		~HTTPRequest();
@@ -70,7 +70,11 @@ class HTTPRequest
 		void print() const;
 
 		HTTPRequest &getRequest() const;
-
+		int get_errorno_(void) const ;
+		void set_errorno_(const int i);
 };
+
+#define errorno_badreq 1
+#define errorno_notsup 2
 
 #endif 
