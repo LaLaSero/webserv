@@ -182,3 +182,31 @@ void  HTTPRequest::set_errorno_(const int i)
 {
     errorno_ = i; 
 }
+
+size_t HTTPRequest::getContentLength() const
+{
+    // "Content-Length" ヘッダーが存在するか確認
+    auto it = _headers.find("Content-Length");
+    
+    // 見つかった場合、その値を size_t 型に変換して返す
+    if (it != _headers.end())
+    {
+        try
+        {
+            return std::stoull(it->second);  // string を size_t に変換
+        }
+        catch (const std::invalid_argument& e)
+        {
+            // Content-Length が無効な場合、デフォルト値 0 を返す
+            return 0;
+        }
+        catch (const std::out_of_range& e)
+        {
+            // 範囲外の場合もデフォルト値 0 を返す
+            return 0;
+        }
+    }
+    
+    // Content-Length が存在しなければデフォルト値 0 を返す
+    return (-1);
+}

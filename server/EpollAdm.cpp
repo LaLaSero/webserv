@@ -35,7 +35,8 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
     events |= kFdeRead;
   if ((epev.events & EPOLLOUT) && (fde->state & kFdeWrite)) 
     events |= kFdeWrite;
-  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+  if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) 
+  {
     if (epev.events & EPOLLERR)
         throw std::exception();
     if (epev.events & EPOLLHUP)
@@ -73,8 +74,8 @@ void EpollAdm::delete_event(FdEvent *fde)
     if (it == registered_fd_events_.end()) 
         throw std::runtime_error("delete_event Error: File descriptor not registered");
     // epoll_ctl を使ってイベントを削除
-    std::cout << epfd_ << std::endl;
-    std::cout << fde->fd << std::endl;
+    // std::cout << epfd_ << std::endl;
+    // std::cout << fde->fd << std::endl;
     if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fde->fd, NULL) < 0) {
         throw std::runtime_error("Epoll Delete Error");
     }
@@ -141,7 +142,10 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
     for (int i = 0; i < event_num; ++i) 
     {
         if (registered_fd_events_.find(epoll_events[i].data.fd) == registered_fd_events_.end())
+        {
+          //epoll wait detectes non_registerd_fd_events
             throw std::runtime_error("Error occurred in Wait event");
+        }
         FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
         // FdandEventの作成と追加
         FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定

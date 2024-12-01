@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/27 14:30:25 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/10/27 16:11:27 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/11/30 15:30:27 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,4 +45,3 @@ int Socket::GetFd() const {
 const Config &Socket::GetConfig() const {
     return config_;
 }
-

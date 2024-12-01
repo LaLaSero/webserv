@@ -37,3 +37,11 @@ int ClientSocket::get_server_fd()const
 {
   return (server_fd_);
 }
+
+bool ClientSocket::IsShutdown() {
+  return is_shutdown_;
+}
+
+void ClientSocket::SetIsShutdown(bool is_shutdown) {
+  is_shutdown_ = is_shutdown;
+}

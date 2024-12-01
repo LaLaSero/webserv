@@ -85,7 +85,8 @@ void HTTPResponse::makeMessage()
 bool HTTPResponse::isCGIRequest(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
-	if (uri.find("/cgi-bin/") == 0)
+	std::cout << uri << std::endl;
+	if (uri.find("/cgi-bin/") != 0)
 	{
 		return true;
 	}
@@ -138,6 +139,8 @@ bool HTTPResponse::isAutoIndex(HTTPRequest& request)
 void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
+	
+	std::cout << uri << std::endl;
 
 	if (request.get_errorno_() != 0)
 	{
@@ -146,7 +149,8 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
-		handleCGIRequest(request);
+		std::cout << "cgi" << std::endl;
+		// handleCGIRequest(request);
 	}
 	else if (isRedirectRequest(request))
 	{
@@ -181,4 +185,3 @@ void HTTPResponse::SetChildServer(const ChildServer *cs)
 {
 	_server = cs;
 }
-

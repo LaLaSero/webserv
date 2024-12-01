@@ -96,7 +96,6 @@ class HTTPResponse
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;
-
 };
 
 #endif
