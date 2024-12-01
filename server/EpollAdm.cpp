@@ -74,8 +74,8 @@ void EpollAdm::delete_event(FdEvent *fde)
     if (it == registered_fd_events_.end()) 
         throw std::runtime_error("delete_event Error: File descriptor not registered");
     // epoll_ctl を使ってイベントを削除
-    std::cout << epfd_ << std::endl;
-    std::cout << fde->fd << std::endl;
+    // std::cout << epfd_ << std::endl;
+    // std::cout << fde->fd << std::endl;
     if (epoll_ctl(epfd_, EPOLL_CTL_DEL, fde->fd, NULL) < 0) {
         throw std::runtime_error("Epoll Delete Error");
     }

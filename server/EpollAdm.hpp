@@ -20,6 +20,7 @@
 #include <map>
 #include <vector>
 #include <sys/time.h>
+#include"ClientSocket.hpp"
 
 enum EFdeEvent {
   kFdeRead = 0x0001,
@@ -41,10 +42,13 @@ struct FdEvent {
   long timeout_ms;
   long last_active;
 
+
   // 監視対象のFdeEvent
   unsigned int state;
 
   void *data;
+
+ ClientSocket *original_clinet;
 };
 
 struct FdandEvent {
