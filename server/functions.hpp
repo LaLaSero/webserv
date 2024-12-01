@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/03 13:38:42 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/12/01 15:32:43 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/01 20:18:53 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,16 @@
 #include"ListenSocket.hpp"
 #include"ClientSocket.hpp"
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/epoll.h>
+#include <signal.h>
 // Socket関連
 int PreparePassiveSocket(const char *host, const char *service, int type,
                       SocketAddress *sockaddr, bool doListen,

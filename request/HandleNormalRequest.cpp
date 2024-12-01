@@ -10,8 +10,7 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	}
 	else if (method == "POST")
 	{
-		// POSTリクエストの処理
-		makeBodyPOST(request);
+		request.setMode(POST_RESPONSE);
 	}
 	else if (method == "DELETE")
 	{

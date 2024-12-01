@@ -86,17 +86,7 @@ bool HTTPResponse::isCGIRequest(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 	std::cout << uri << std::endl;
-	if (uri.find("/cgi-bin/") != 0)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool HTTPResponse::isRedirectRequest(HTTPRequest& request)
-{
-	std::string uri = request.getUri();
-	if (uri.find("/redirect/") == 0)
+	if (uri.find("/cgi-bin/") == 0)
 	{
 		return true;
 	}
@@ -152,23 +142,13 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 		std::cout << "cgi" << std::endl;
 		// handleCGIRequest(request);
 	}
-	else if (isRedirectRequest(request))
-	{
-		request.setMode(REDIRECT_RESPONSE);
-		handleRedirectRequest(request);
-	}
 	else
 	{
 		request.setMode(NORMAL_RESPONSE);
 		if (isAutoIndex(request))
-		{
-			// 自動インデックスの処理
 			handleAutoIndex(request);
-		}
 		else
-		{
 			handleNormalRequest(request);
-		}
 	}
 
 }

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/01 18:32:38 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/01 20:40:03 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,6 +151,35 @@ bool isfinish()
   return (true);
 }
 
+void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
+{
+    bool should_close_client = true;
+    std::cout << "POST writing starting" << std::endl;
+    if (events & kFdeWrite) 
+    {
+
+        std::string *data_to_send = reinterpret_cast<std::string *>(fde->data);
+        ssize_t nwritten = write(fde->fd, data_to_send->c_str(), data_to_send->size());
+        if (nwritten == -1) 
+        {
+            perror("write failed");
+            close(fde->fd);
+            epoll->delete_event(fde);
+            delete fde;
+            return;
+        }
+        FdEvent *original_fde;
+        original_fde = reinterpret_cast<FdEvent*>(fde->data);
+        if (should_close_client)
+        {
+            fde->original_clinet->SetResponse("");
+            epoll->GotoNextEvent(original_fde, kFdeWrite);
+        }
+        epoll->delete_event(fde);
+        close(fde->fd);
+    }
+}
+
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
     bool should_close_client = true;
@@ -207,7 +236,20 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
     }
 }
 
+bool try_makefile(const std::string &body, const std::string dir_path)
+{
+    std::string file_data = body;
+    std::string save_path = dir_path + "posted.txt";
 
+    std::ofstream file(save_path, std::ios::binary);
+    if (!file.is_open())
+        return (false);
+    file.write(file_data.c_str(), file_data.size());
+    file.close();
+    if (!file)
+        return (false);
+    return (true);
+}
 
 
 void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
@@ -245,9 +287,36 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
             response.SetChildServer(&server);
             response.selectResponseMode(request);
-
+            if (request.getMode() == POST_RESPONSE)
+            {
+              if (response.makeBodyPOST(request))
+              {
+                std::string res = response.makeBodyResponse();
+                client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
+                epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
+              }
+              else
+              {
+                int fd = open(request.getUri().c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_ASYNC, 0644);
+                if (fd == -1)
+                {
+                  response.HelpPostStatusChange(STATUS_500);
+                  std::string res = response.makeBodyResponse();
+                  client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
+                  epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
+                }
+                else
+                {
+                  std::string Body = request.getBody();
+                  FdEvent *post_write_fde = CreateFdEvent(fd, HandlePOSTSocketEvent, &(Body));
+                  post_write_fde->original_clinet = client_sock;
+                  epoll->register_event(post_write_fde);
+                  epoll->Add(post_write_fde, kFdeWrite);
+                }
+              } 
+            }
             // CGIレスポンスが必要な場合
-            if (request.getMode() == 2)
+            if (request.getMode() == CGI_RESPONSE)
             {
                 // CGIプロセス用の入力と出力のpipeを作成
                 std::cout << "start cgi" << std::endl;
@@ -295,8 +364,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     epoll->Add(cgi_input_fde, kFdeRead);  // 出力pipeの読み込みイベントを監視
                     epoll->register_event(cgi_output_fde);
                     epoll->Add(cgi_output_fde, kFdeWrite);  // 入力pipeへの書き込みイベントを監視
-
-                    // さらにクライアントへのレスポンス処理などを進める
                 }
             }
             else

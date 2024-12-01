@@ -16,6 +16,7 @@
 #define NORMAL_RESPONSE 0
 #define REDIRECT_RESPONSE 1
 #define CGI_RESPONSE 2
+#define POST_RESPONSE 3
 
 struct FileInfo {
     std::string name;
@@ -47,15 +48,12 @@ class HTTPResponse
 		void handleNormalRequest(HTTPRequest& request);
 
 		void makeBodyGET(HTTPRequest& request);
-		void makeBodyPOST(HTTPRequest& request);
+		bool makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
 		void makeBodyError(HTTPRequest& request);
 
 		bool isCGIRequest(HTTPRequest& request);
 		void handleCGIRequest(HTTPRequest& request);
-
-		bool isRedirectRequest(HTTPRequest& request);
-		void handleRedirectRequest(HTTPRequest& request);
 
 		bool isAutoIndex(HTTPRequest& request);
 		void handleAutoIndex(HTTPRequest& request);
@@ -79,6 +77,7 @@ class HTTPResponse
 		std::string getStatusMessage();
 		void setHeadersContentType(std::string& true_path);
 		void SetChildServer(const ChildServer *loc);
+		void HelpPostStatusChange(HTTPStatusCode i);
 	private:
 		std::string		_version;
 		std::string		_statusMessage;
