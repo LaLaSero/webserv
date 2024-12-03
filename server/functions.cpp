@@ -158,7 +158,6 @@ void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollA
     std::cout << "POST writing starting" << std::endl;
     if (events & kFdeWrite) 
     {
-
         std::string *data_to_send = reinterpret_cast<std::string *>(fde->data);
         ssize_t nwritten = write(fde->fd, data_to_send->c_str(), data_to_send->size());
         if (nwritten == -1) 

@@ -21,7 +21,6 @@ SRCS = main.cpp \
        request/HandleAutoIndexRequest.cpp \
        request/HandleCGIRequest.cpp \
        request/HandleNormalRequest.cpp \
-       request/HandleRedirectRequest.cpp \
        request/HTTPRequest.cpp \
        request/HTTPResponseDELETE.cpp \
        request/HTTPResponseGET.cpp \
