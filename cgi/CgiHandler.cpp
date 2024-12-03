@@ -127,3 +127,8 @@ bool CgiHandler::ExecuteCGI(std::string &response)
 		return local_redirect_flag;
 	}
 }
+
+std::map<std::string, std::string> CgiHandler::getEnvVars() const
+{
+	return env_vars_;
+}

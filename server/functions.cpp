@@ -21,6 +21,7 @@
 #include"../request/HTTPResponse.hpp"
 #include"../request/HTTPRequest.hpp"
 #include"../request/ParseRequest.hpp"
+#include"../cgi/CgiHandler.hpp"
 #include"functions.hpp"
 
 static void prepare_hints(struct addrinfo &hints, int type)
@@ -169,6 +170,11 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
         }
         // 読み取ったデータを処理する（レスポンスをクライアントに送信など）
         std::cout << "CGI Response: " << buf << std::endl;
+
+		bool local_redirect_flag = 0;
+		std::string response = ParseCGIResponse(buf, local_redirect_flag); // responseの作成
+		std::cout << "CGI Response:\n\n" << response << std::endl;
+
         // クライアントにデータを送る処理へ遷移（例: epollの書き込みイベントへ）
         FdEvent *original_fde;
         original_fde = reinterpret_cast<FdEvent*>(fde->data);
@@ -249,6 +255,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             // CGIレスポンスが必要な場合
             if (request.getMode() == 2)
             {
+				CgiHandler cgi_handler(request);
+
                 // CGIプロセス用の入力と出力のpipeを作成
                 std::cout << "start cgi" << std::endl;
                 int input_pipe[2], output_pipe[2];
@@ -274,21 +282,60 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     close(input_pipe[1]);
                     close(output_pipe[0]);
 
-                    // 実際のCGIプログラムを実行（例: "/usr/bin/php"など）
-                    char *args[] = { "python3", "/home/ryanagit/test.py", NULL };
-                    execvp("python3", args);
-                    perror("execl failed");
-                    exit(1);
+
+					std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
+					std::vector<char *> envp;
+					for (std::map<std::string, std::string>::const_iterator it = env_vars.begin(); it != env_vars.end(); ++it)
+					{
+						std::string env_pair = it->first + "=" + it->second;
+						envp.push_back(strdup(env_pair.c_str()));
+					}
+					envp.push_back(NULL);
+
+					std::string script_path = env_vars["SCRIPT_NAME"];
+					std::string python_path = "python3";
+					
+					python_path = "/usr/bin/python3"; // for test
+					script_path = "./test.py";	// for test
+					chdir("../cgi-bin");
+
+					char *argv[] = {const_cast<char *>(python_path.c_str()), 
+									const_cast<char *>(script_path.c_str()),
+									NULL};
+					execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
+
+					perror("execve");
+					for (size_t i = 0; i < envp.size(); ++i)
+					{
+						free(envp[i]);
+					}
+					std::exit(1);
+
+
+
+                    // // 実際のCGIプログラムを実行（例: "/usr/bin/php"など）
+                    // char *args[] = { "python3", "/home/ryanagit/test.py", NULL };
+                    // execvp("python3", args);
+                    // perror("execl failed");
+                    // exit(1);
                 }
                 else  // 親プロセス（サーバー）
                 {
                     // 親プロセス側でpipeの読み書きイベントをepollに登録
                     FdEvent *cgi_input_fde = CreateFdEvent(output_pipe[0], HandleCgiSocketEvent, fde);  // 入力pipeの読み込み
                     FdEvent *cgi_output_fde = CreateFdEvent(input_pipe[1], HandleCgiSocketEvent, NULL); // 出力pipeへの書き込み
+					
+					std::ostringstream oss;
 
                     std::cout << "input:" << input_pipe[0]<< std::endl;
-                    std::cout << "output:" << output_pipe[1] << std::endl;
+                    // std::cout << "output:" << output_pipe[1] << std::endl;
+					oss << "output:" << output_pipe[1] << std::endl;
                     std::cout << "create cgi event" << std::endl;
+                    
+					std::string output = oss.str();
+					bool local_redirect_flag = 0;
+					std::string cgi_response = ParseCGIResponse(output, local_redirect_flag);
+					std::cout << "cgi response:" << cgi_response << std::endl;
 
                     cgi_input_fde->original_clinet = client_sock;
                     epoll->register_event(cgi_input_fde);
