@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   functions.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: kishizu <kishizu@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/01 18:32:38 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/03 16:37:27 by kishizu          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,9 +171,11 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
         // 読み取ったデータを処理する（レスポンスをクライアントに送信など）
         std::cout << "CGI Response: " << buf << std::endl;
 
-		bool local_redirect_flag = 0;
-		std::string response = ParseCGIResponse(buf, local_redirect_flag); // responseの作成
-		std::cout << "CGI Response:\n\n" << response << std::endl;
+        bool local_redirect_flag = 0;
+        std::string response = ParseCGIResponse(buf, local_redirect_flag); // responseの作成
+        std::cout << "CGI Response:\n\n" << response << std::endl;
+        if (local_redirect_flag)
+          std::cout << "local redirect detected" << std::endl;
 
         // クライアントにデータを送る処理へ遷移（例: epollの書き込みイベントへ）
         FdEvent *original_fde;
@@ -255,7 +257,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             // CGIレスポンスが必要な場合
             if (request.getMode() == 2)
             {
-				CgiHandler cgi_handler(request);
+				        CgiHandler cgi_handler(request);
 
                 // CGIプロセス用の入力と出力のpipeを作成
                 std::cout << "start cgi" << std::endl;
@@ -283,33 +285,33 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     close(output_pipe[0]);
 
 
-					std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
-					std::vector<char *> envp;
-					for (std::map<std::string, std::string>::const_iterator it = env_vars.begin(); it != env_vars.end(); ++it)
-					{
-						std::string env_pair = it->first + "=" + it->second;
-						envp.push_back(strdup(env_pair.c_str()));
-					}
-					envp.push_back(NULL);
+                    std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
+                    std::vector<char *> envp;
+                    for (std::map<std::string, std::string>::const_iterator it = env_vars.begin(); it != env_vars.end(); ++it)
+                    {
+                      std::string env_pair = it->first + "=" + it->second;
+                      envp.push_back(strdup(env_pair.c_str()));
+                    }
+                    envp.push_back(NULL);
 
-					std::string script_path = env_vars["SCRIPT_NAME"];
-					std::string python_path = "python3";
-					
-					python_path = "/usr/bin/python3"; // for test
-					script_path = "./test.py";	// for test
-					chdir("../cgi-bin");
+                    std::string script_path = env_vars["SCRIPT_NAME"];
+                    std::string python_path = "python3";
+                    
+                    python_path = "/usr/bin/python3"; // for test
+                    script_path = "./test.py";	// for test
+                    chdir("../cgi-bin");
 
-					char *argv[] = {const_cast<char *>(python_path.c_str()), 
-									const_cast<char *>(script_path.c_str()),
-									NULL};
-					execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
+                    char *argv[] = {const_cast<char *>(python_path.c_str()), 
+                            const_cast<char *>(script_path.c_str()),
+                            NULL};
+                    execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
 
-					perror("execve");
-					for (size_t i = 0; i < envp.size(); ++i)
-					{
-						free(envp[i]);
-					}
-					std::exit(1);
+                    perror("execve");
+                    for (size_t i = 0; i < envp.size(); ++i)
+                    {
+                      free(envp[i]);
+                    }
+                    std::exit(1);
 
 
 
@@ -325,18 +327,11 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     FdEvent *cgi_input_fde = CreateFdEvent(output_pipe[0], HandleCgiSocketEvent, fde);  // 入力pipeの読み込み
                     FdEvent *cgi_output_fde = CreateFdEvent(input_pipe[1], HandleCgiSocketEvent, NULL); // 出力pipeへの書き込み
 					
-					std::ostringstream oss;
 
                     std::cout << "input:" << input_pipe[0]<< std::endl;
-                    // std::cout << "output:" << output_pipe[1] << std::endl;
-					oss << "output:" << output_pipe[1] << std::endl;
+                    std::cout << "output:" << output_pipe[1] << std::endl;
                     std::cout << "create cgi event" << std::endl;
                     
-					std::string output = oss.str();
-					bool local_redirect_flag = 0;
-					std::string cgi_response = ParseCGIResponse(output, local_redirect_flag);
-					std::cout << "cgi response:" << cgi_response << std::endl;
-
                     cgi_input_fde->original_clinet = client_sock;
                     epoll->register_event(cgi_input_fde);
                     epoll->Add(cgi_input_fde, kFdeRead);  // 出力pipeの読み込みイベントを監視
