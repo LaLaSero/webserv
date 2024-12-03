@@ -12,6 +12,13 @@
 
 #include"EpollAdm.hpp"
 
+long GetNowTime() {
+  timeval tv;
+
+  gettimeofday(&tv, NULL);
+  return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+}
+
 epoll_event MakeEpollEvent(FdEvent *fde) 
 {
   epoll_event epev;
@@ -49,6 +56,7 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
   FdandEvent fdee;
   fdee.fde = fde;
   fdee.events = events;
+  fde->last_active = GetNowTime();
   return fdee;
 }
 
@@ -102,13 +110,6 @@ void EpollAdm::Set(FdEvent *fde, unsigned int events) {
 
 void EpollAdm::Add(FdEvent *fde, unsigned int events) {
   Set(fde, fde->state | events);
-}
-
-static long GetNowTime() {
-  timeval tv;
-
-  gettimeofday(&tv, NULL);
-  return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
 std::vector<FdandEvent> EpollAdm::RetrieveTimeouts() 
