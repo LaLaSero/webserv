@@ -25,7 +25,10 @@ private:
 public:
 	CgiHandler(HTTPRequest &request);
 	void setRequestBody(const std::string &body);
-	std::string ExecuteCGI();
+	bool is_valid_root_and_executer_cgi();
+	bool ExecuteCGI(std::string &response);
+	std::map<std::string, std::string> getEnvVars() const;
+
 };
 
 #endif

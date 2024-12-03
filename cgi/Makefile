@@ -2,8 +2,18 @@
 
 NAME=cgitest
 CXX=c++
-CXXFLAGS=-std=c++98 -Wall -Wextra -Werror
-SRC=CgiHandler.cpp cgitest_main.cpp ../request/HTTPRequest.cpp CgiResponse.cpp ../config/Location.cpp
+CXXFLAGS= -Wall -Wextra -Werror #-std=c++98
+SRC=CgiHandler.cpp\
+	cgitest_main.cpp\
+	../request/HTTPRequest.cpp\
+	  ../config/Location.cpp\
+	 CgiResponse.cpp\
+	 ../request/ParseRequest.cpp\
+	../request/parse_state/RequestLineState.cpp\
+	 ../request/parse_state/HeadersState.cpp\
+	 ../request/parse_state/BodyState.cpp\
+	 ../request/parse_state/FinishState.cpp
+
 OBJ=$(SRC:.cpp=.o)
 
 test: re
