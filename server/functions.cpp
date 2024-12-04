@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   functions.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kishizu <kishizu@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/03 16:41:43 by kishizu          ###   ########.fr       */
+/*   Updated: 2024/12/04 19:42:07 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,24 +216,6 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
         epoll->delete_event(fde);
         close(fde->fd);
     }
-    if (events & kFdeWrite) 
-    {
-        // CGIの入力にデータを書き込む
-        std::cout << "start cgi writing" << std::endl;
-        std::string data_to_send = "some data for cgi";
-        ssize_t nwritten = write(fde->fd, data_to_send.c_str(), data_to_send.size());
-        if (nwritten == -1) 
-        {
-            perror("write failed");
-            close(fde->fd);
-            epoll->delete_event(fde);
-            delete fde;
-            return;
-        }
-        std::cout << "cgi writing complete" << std::endl;
-        epoll->delete_event(fde);
-        close(fde->fd);
-    }
     if (events & kFdeError) 
     {
         std::cerr << "Error on CGI socket" << std::endl;
@@ -294,34 +276,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
             response.SetChildServer(&server);
             response.selectResponseMode(request);
-            if (request.getMode() == POST_RESPONSE)
-            {
-              if (response.makeBodyPOST(request))
-              {
-                std::string res = response.makeBodyResponse();
-                client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
-                epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
-              }
-              else
-              {
-                int fd = open(request.getUri().c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_ASYNC, 0644);
-                if (fd == -1)
-                {
-                  response.HelpPostStatusChange(STATUS_500);
-                  std::string res = response.makeBodyResponse();
-                  client_sock->SetResponse(res); // クライアントソケットにレスポンスを保存
-                  epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
-                }
-                else
-                {
-                  std::string Body = request.getBody();
-                  FdEvent *post_write_fde = CreateFdEvent(fd, HandlePOSTSocketEvent, &(Body));
-                  post_write_fde->original_clinet = client_sock;
-                  epoll->register_event(post_write_fde);
-                  epoll->Add(post_write_fde, kFdeWrite);
-                }
-              } 
-            }
             // CGIレスポンスが必要な場合
             if (request.getMode() == CGI_RESPONSE)
             {
@@ -342,22 +296,15 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     return;
                 }
                 else if (pid == 0)  // 子プロセス（CGI）
-                {
-					ExecuteChildCGI(input_pipe, output_pipe, request);
-
-                    // // 実際のCGIプログラムを実行（例: "/usr/bin/php"など）
-                    // char *args[] = { "python3", "/home/ryanagit/test.py", NULL };
-                    // execvp("python3", args);
-                    // perror("execl failed");
-                    // exit(1);
-                }
+					          ExecuteChildCGI(input_pipe, output_pipe, request);
                 else  // 親プロセス（サーバー）
                 {
                     // 親プロセス側でpipeの読み書きイベントをepollに登録
                     FdEvent *cgi_input_fde = CreateFdEvent(output_pipe[0], HandleCgiSocketEvent, fde);  // 入力pipeの読み込み
                     FdEvent *cgi_output_fde = CreateFdEvent(input_pipe[1], HandleCgiSocketEvent, NULL); // 出力pipeへの書き込み
 					
-
+                    cgi_input_fde->state |= kFdeTimeout;
+                    cgi_output_fde->state |= kFdeTimeout;
                     std::cout << "input:" << input_pipe[0]<< std::endl;
                     std::cout << "output:" << output_pipe[1] << std::endl;
                     std::cout << "create cgi event" << std::endl;

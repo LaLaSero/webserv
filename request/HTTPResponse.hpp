@@ -48,7 +48,7 @@ class HTTPResponse
 		void handleNormalRequest(HTTPRequest& request);
 
 		void makeBodyGET(HTTPRequest& request);
-		bool makeBodyPOST(HTTPRequest& request);
+		void makeBodyPOST(HTTPRequest& request);
 		void makeBodyDELETE(HTTPRequest& request);
 		void makeBodyError(HTTPRequest& request);
 
