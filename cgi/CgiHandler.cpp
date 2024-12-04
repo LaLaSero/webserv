@@ -128,6 +128,48 @@ bool CgiHandler::ExecuteCGI(std::string &response)
 	}
 }
 
+void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request)
+{
+	CgiHandler cgi_handler(request);
+
+	dup2(input_pipe[0], STDIN_FILENO);  // input_pipe[0]を標準入力に接続
+	dup2(output_pipe[1], STDOUT_FILENO);  // output_pipe[1]を標準出力に接続
+
+	close(input_pipe[1]);
+	close(output_pipe[0]);
+
+
+	std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
+	std::vector<char *> envp;
+	for (std::map<std::string, std::string>::const_iterator it = env_vars.begin(); it != env_vars.end(); ++it)
+	{
+		std::string env_pair = it->first + "=" + it->second;
+		envp.push_back(strdup(env_pair.c_str()));
+	}
+	envp.push_back(NULL);
+
+	std::string script_path = env_vars["SCRIPT_NAME"];
+	std::string python_path = "python3";
+	
+	python_path = "/usr/bin/python3"; // for test
+	script_path = "./test.py";	// for test
+	chdir("../cgi-bin");
+
+	char *argv[] = {const_cast<char *>(python_path.c_str()), 
+			const_cast<char *>(script_path.c_str()),
+			NULL};
+	execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
+
+	perror("execve");
+	for (size_t i = 0; i < envp.size(); ++i)
+	{
+		free(envp[i]);
+	}
+	std::exit(1);
+
+}
+
+
 std::map<std::string, std::string> CgiHandler::getEnvVars() const
 {
 	return env_vars_;

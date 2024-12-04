@@ -28,7 +28,8 @@ public:
 	bool is_valid_root_and_executer_cgi();
 	bool ExecuteCGI(std::string &response);
 	std::map<std::string, std::string> getEnvVars() const;
-
 };
+
+void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request);
 
 #endif
