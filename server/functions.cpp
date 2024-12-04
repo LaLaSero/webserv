@@ -257,8 +257,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             // CGIレスポンスが必要な場合
             if (request.getMode() == 2)
             {
-				        CgiHandler cgi_handler(request);
-
                 // CGIプロセス用の入力と出力のpipeを作成
                 std::cout << "start cgi" << std::endl;
                 int input_pipe[2], output_pipe[2];
@@ -277,43 +275,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                 }
                 else if (pid == 0)  // 子プロセス（CGI）
                 {
-                    // 子プロセスの標準入力を入力pipeに、標準出力を出力pipeにリダイレクト
-                    dup2(input_pipe[0], STDIN_FILENO);  // input_pipe[0]を標準入力に接続
-                    dup2(output_pipe[1], STDOUT_FILENO);  // output_pipe[1]を標準出力に接続
-
-                    close(input_pipe[1]);
-                    close(output_pipe[0]);
-
-
-                    std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
-                    std::vector<char *> envp;
-                    for (std::map<std::string, std::string>::const_iterator it = env_vars.begin(); it != env_vars.end(); ++it)
-                    {
-                      std::string env_pair = it->first + "=" + it->second;
-                      envp.push_back(strdup(env_pair.c_str()));
-                    }
-                    envp.push_back(NULL);
-
-                    std::string script_path = env_vars["SCRIPT_NAME"];
-                    std::string python_path = "python3";
-                    
-                    python_path = "/usr/bin/python3"; // for test
-                    script_path = "./test.py";	// for test
-                    chdir("../cgi-bin");
-
-                    char *argv[] = {const_cast<char *>(python_path.c_str()), 
-                            const_cast<char *>(script_path.c_str()),
-                            NULL};
-                    execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
-
-                    perror("execve");
-                    for (size_t i = 0; i < envp.size(); ++i)
-                    {
-                      free(envp[i]);
-                    }
-                    std::exit(1);
-
-
+					ExecuteChildCGI(input_pipe, output_pipe, request);
 
                     // // 実際のCGIプログラムを実行（例: "/usr/bin/php"など）
                     // char *args[] = { "python3", "/home/ryanagit/test.py", NULL };
