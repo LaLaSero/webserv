@@ -118,7 +118,7 @@ bool CgiHandler::ExecuteCGI(std::string &response)
 		bool local_redirect_flag = 0;
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
 		{
-			response = ParseCGIResponse(cgi_response, local_redirect_flag); // responseの作成
+			response = ParseCGIResponse(cgi_response); // responseの作成
 		}
 		else
 		{

@@ -7,6 +7,6 @@
 #include <sstream>
 #include "../request/HTTPRequest.hpp"
 
-std::string ParseCGIResponse(const std::string &response, bool &local_redirect_flag);
+std::string ParseCGIResponse(const std::string &response);
 
 #endif

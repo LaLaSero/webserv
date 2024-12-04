@@ -1,2 +1,3 @@
-while(1):
-    print("aaa")
+# while(1):
+#     print("aaa")
+print("hello world")

@@ -58,11 +58,10 @@ std::string DetermineResponseType(const HeaderMap &headers, const std::string &b
 	return response_type;
 }
 
-std::string ParseCGIResponse(const std::string &response, bool &local_redirect_flag)
+std::string ParseCGIResponse(const std::string &response)
 {
 	std::string result = "";
 
-	local_redirect_flag = 0;
 	size_t header_end = response.find("\r\n\r\n");
 	if (header_end == std::string::npos)
 	{
@@ -95,7 +94,6 @@ std::string ParseCGIResponse(const std::string &response, bool &local_redirect_f
 		else
 		{
 			result += "Location: " + location + "\n";
-			local_redirect_flag = 1;
 		}
 	}
 	else if (response_type == "client-redir-response")

@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/04 19:53:11 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/04 20:23:21 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,37 +182,37 @@ void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollA
 
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll) 
 {
-    bool should_close_client = true;
     if (events & kFdeRead) 
     {
         // CGIの出力を読み取る
         std::cout << "start cgi reading" << std::endl;
         // `output_pipe` からデータを読み取り、クライアントに送信するなどの処理
-        char buf[BUF_SIZE];
-        ssize_t n = read(fde->fd, buf, sizeof(buf) - 1);
-        buf[n] = '\0';  // Null-terminate the string
-        if (n <= 0) 
-        {  
-            // EOF (TCP flag FIN) or Error
-            should_close_client = true;
+        char buf[1];
+        ssize_t n;
+        std::string read_cont;
+        
+        while (1)
+        { 
+          n = read(fde->fd, buf, sizeof(buf) - 1);
+          buf[n] = '\0';  // Null-terminate the string
+          if (n <= 0) 
+          { 
+            break;
+          }
+          read_cont += buf;
+        }
+        if (n < 0)
+        {
+          perror("cgi read");
+          std::exit(1);
         }
         // 読み取ったデータを処理する（レスポンスをクライアントに送信など）
-        std::cout << "CGI Response: " << buf << std::endl;
-
-        bool local_redirect_flag = 0;
-        std::string response = ParseCGIResponse(buf, local_redirect_flag); // responseの作成
-        std::cout << "CGI Response:\n\n" << response << std::endl;
-        if (local_redirect_flag)
-          std::cout << "local redirect detected" << std::endl;
-
-        // クライアントにデータを送る処理へ遷移（例: epollの書き込みイベントへ）
+        std::cout << "CGI Response: " << read_cont << std::endl;
         FdEvent *original_fde;
         original_fde = reinterpret_cast<FdEvent*>(fde->data);
-        if (should_close_client)
-        {
-            fde->original_clinet->SetResponse(buf);
-            epoll->GotoNextEvent(original_fde, kFdeWrite);
-        }
+        std::string response = ParseCGIResponse(read_cont); // responseの作成
+        fde->original_clinet->SetResponse(buf);
+        epoll->GotoNextEvent(original_fde, kFdeWrite);
         epoll->delete_event(fde);
         close(fde->fd);
     }
