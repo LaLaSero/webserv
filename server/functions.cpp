@@ -6,7 +6,7 @@
 /*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/04 19:42:07 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/04 19:53:11 by ryanagit         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,8 +281,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             {
                 // CGIプロセス用の入力と出力のpipeを作成
                 std::cout << "start cgi" << std::endl;
-                int input_pipe[2], output_pipe[2];
-                if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
+                int output_pipe[2];
+                if (pipe(output_pipe) == -1)
                 {
                     perror("pipe failed");
                     return;
@@ -296,24 +296,19 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
                     return;
                 }
                 else if (pid == 0)  // 子プロセス（CGI）
-					          ExecuteChildCGI(input_pipe, output_pipe, request);
+					          ExecuteChildCGI(output_pipe, request);
                 else  // 親プロセス（サーバー）
                 {
                     // 親プロセス側でpipeの読み書きイベントをepollに登録
                     FdEvent *cgi_input_fde = CreateFdEvent(output_pipe[0], HandleCgiSocketEvent, fde);  // 入力pipeの読み込み
-                    FdEvent *cgi_output_fde = CreateFdEvent(input_pipe[1], HandleCgiSocketEvent, NULL); // 出力pipeへの書き込み
 					
                     cgi_input_fde->state |= kFdeTimeout;
-                    cgi_output_fde->state |= kFdeTimeout;
-                    std::cout << "input:" << input_pipe[0]<< std::endl;
                     std::cout << "output:" << output_pipe[1] << std::endl;
                     std::cout << "create cgi event" << std::endl;
                     
                     cgi_input_fde->original_clinet = client_sock;
                     epoll->register_event(cgi_input_fde);
-                    epoll->Add(cgi_input_fde, kFdeRead);  // 出力pipeの読み込みイベントを監視
-                    epoll->register_event(cgi_output_fde);
-                    epoll->Add(cgi_output_fde, kFdeWrite);  // 入力pipeへの書き込みイベントを監視
+                    epoll->Add(cgi_input_fde, kFdeRead);
                 }
             }
             else

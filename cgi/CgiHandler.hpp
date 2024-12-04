@@ -30,6 +30,6 @@ public:
 	std::map<std::string, std::string> getEnvVars() const;
 };
 
-void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request);
+void ExecuteChildCGI(int *output_pipe, HTTPRequest request);
 
 #endif

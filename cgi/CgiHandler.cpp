@@ -128,14 +128,11 @@ bool CgiHandler::ExecuteCGI(std::string &response)
 	}
 }
 
-void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request)
+void ExecuteChildCGI(int *output_pipe, HTTPRequest request)
 {
 	CgiHandler cgi_handler(request);
 
-	dup2(input_pipe[0], STDIN_FILENO);  // input_pipe[0]を標準入力に接続
 	dup2(output_pipe[1], STDOUT_FILENO);  // output_pipe[1]を標準出力に接続
-
-	close(input_pipe[1]);
 	close(output_pipe[0]);
 
 
