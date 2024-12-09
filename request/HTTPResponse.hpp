@@ -78,6 +78,7 @@ class HTTPResponse
 		void setHeadersContentType(std::string& true_path);
 		void SetChildServer(const ChildServer *loc);
 		void HelpPostStatusChange(HTTPStatusCode i);
+		void set405Error(HTTPRequest& request);
 
 		const std::string& getMessage() const; 
 	private:

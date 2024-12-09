@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/09 17:43:06 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/09 23:38:28 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,7 +276,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             const std::string &hostname = request.getHost();
             ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
             response.SetChildServer(&server);
-            response.selectResponseMode(request);
 
             const Location &location = server.find_location(request.getPath());
             bool method_allowed = false;
@@ -291,12 +290,14 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             if (!method_allowed)
             {
               // more smarter error handling
-              std::cout << "Method not allowed" << std::endl;
-              response.generateErrorResponse(STATUS_405, "Method Not Allowed", "The requested method is not allowed for this resource.");
-              client_sock->SetResponse(response.getMessage()); // クライアントソケットにレスポンスを保存
+              std::cout << "405" << std::endl;
+              response.set405Error(request);
+              client_sock->SetResponse(response.makeBodyResponse()); // クライアントソケットにレスポンスを保存
               epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
               return ;
             }
+            else
+              response.selectResponseMode(request);
 
             // CGIレスポンスが必要な場合
             if (request.getMode() == CGI_RESPONSE)

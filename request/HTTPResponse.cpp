@@ -128,7 +128,14 @@ bool HTTPResponse::isAutoIndex(HTTPRequest& request)
 	return false;
 }
 
-
+void HTTPResponse::set405Error(HTTPRequest& request)
+{
+	_statusCode = STATUS_405;
+	_body = "<html><head><title>405 Method Not Allowed</title></head><body><h1>405 Method Not Allowed</h1><p>Method Not Allowed</p></body></html>";
+	makeMessage();
+	_keepAlive = request.getHeader("Connection") == "keep-alive";
+	std::cout << message << std::endl;
+}
 // CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
 void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {

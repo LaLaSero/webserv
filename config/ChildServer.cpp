@@ -36,23 +36,37 @@ const std::map<int, std::string>& ChildServer::get_error_page() const {
     return error_page_;
 }
 
-const Location& ChildServer::find_location(const std::string& path) const {
+const Location& ChildServer::find_location(const std::string& path) const
+{
+    const Location* best_match = NULL;
+    size_t best_match_length = 0;
+
+    // 全てのlocationをループ
     for (std::vector<Location>::const_iterator it = locations_.begin(); it != locations_.end(); ++it) {
-        // パスが Location のパスにマッチするか確認
-        if (path.find(it->getPath()) == 0) { // 先頭一致
+        const std::string& loc_path = it->getPath();
+        // pathがloc_pathで始まるか確認（先頭一致）
+        if (path.find(loc_path) == 0) {
+            // 現在のloc_pathがこれまでで最も長く一致している場合、更新
+            if (loc_path.size() > best_match_length) {
+                best_match = &(*it);
+                best_match_length = loc_path.size();
+            }
+        }
+    }
+
+    // 最長一致のlocationが見つかった場合はそれを返す
+    if (best_match != NULL) {
+        return *best_match;
+    }
+
+    // 一致するlocationがなかった場合、デフォルトlocation("/")を探す
+    for (std::vector<Location>::const_iterator it = locations_.begin(); it != locations_.end(); ++it) {
+        if (it->getPath() == "/") {
             return *it;
         }
     }
 
-    // 一致する Location が見つからなかった場合、デフォルト Location を返す
-    // デフォルト Location が存在する前提とします
-    for (std::vector<Location>::const_iterator it = locations_.begin(); it != locations_.end(); ++it) {
-        if (it->getPath() == "/") { // デフォルトパス
-            return *it;
-        }
-    }
-
-    // デフォルト Location が存在しない場合、例外を投げる
+    // デフォルトlocationもない場合は例外を投げる
     throw std::runtime_error("No matching location found and no default location set.");
 }
 
