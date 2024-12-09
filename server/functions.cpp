@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   functions.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/04 20:23:21 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/09 15:23:46 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -273,7 +273,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
         {
             // HTTPレスポンスの準備
             HTTPResponse response(epoll->get_config());
-            ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd());
+            const std::string &hostname = request.getHost();
+            ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
             response.SetChildServer(&server);
             response.selectResponseMode(request);
             // CGIレスポンスが必要な場合
@@ -407,7 +408,7 @@ void set_up_server(EpollAdm &epoll, Config &conf)
         opened_fd.push_back(fd); 
 
         conf.AddFdandServers(fd, *it);
-        std::cout << "fd:" << fd << std::endl;
+        // std::cout << "fd:" << fd << std::endl;
     }
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:20:04 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/23 15:18:55 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/09 15:36:03 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,15 +56,30 @@ void Config::AddFdandServers(int fd, ChildServer &Server)
     FdandServers_[fd] = Server;
 }
 
-const ChildServer& Config::FindServerfromFd(int fd)const 
+const ChildServer& Config::FindServerfromFd(int fd, const std::string &hostname) const 
 {
     // fd に対応するサーバーがマップに存在するか確認
     std::map<int, ChildServer>::const_iterator it = FdandServers_.find(fd);
-    // 見つからない場合は例外を投げるなどのエラーハンドリング
     if (it == FdandServers_.end())
         throw std::runtime_error("Server not found for the given file descriptor.");
-    // 見つかった場合は、対応するサーバーを参照として返す
-    return it->second;
+    const ChildServer &defaultServer = it->second;
+
+    // 外側のループ
+    for (std::vector<ChildServer>::const_iterator outerIt = ChildServers_.begin(); outerIt != ChildServers_.end(); ++outerIt) {
+        if (outerIt->server_names_empty()) {
+            return defaultServer;
+        }
+        const std::set<std::string>& serverNames = outerIt->get_server_names();
+
+        // 内側のループ
+    for (std::set<std::string>::const_iterator nameIt = serverNames.begin(); nameIt != serverNames.end(); ++nameIt) {
+        if (*nameIt == hostname) {
+            return *outerIt;
+        }
+    }
+    }
+    // 見つからない場合はデフォルトサーバーを返す
+    return defaultServer;
 }
 
 void Config::displayConfig() const {

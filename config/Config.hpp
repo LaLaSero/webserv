@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Config.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:19:40 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/23 15:19:05 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/09 15:24:30 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ class Config
 		std::vector<ChildServer> getchildserver()const;
     	void displayConfig() const;
 		void AddFdandServers(int fd, ChildServer &Server);
-		const ChildServer &FindServerfromFd(int fd)const;
+		const ChildServer &FindServerfromFd(int fd, const std::string &hostname)const;
 	private:
 		std::vector<ChildServer> ChildServers_;
 		std::map<int, ChildServer> FdandServers_;
