@@ -178,9 +178,13 @@ std::string HTTPResponse::generateAutoIndexHTML(const std::vector<FileInfo>& fil
 
         // ディレクトリの場合は末尾に '/' を付加
         std::string fileLink = (file.size == 0) ? escapedName + "/" : escapedName;
+        std::string linkUri = uri;
+        if (!linkUri.empty() && linkUri.back() != '/') {
+            linkUri += "/";
+        }
 
         // ファイル名、サイズ、最終更新日時を表示
-        htmlContent += "<a href=\"" + uri + "/" + escapedName + "\">" + fileLink + "</a>";
+        htmlContent += "<a href=\"" + linkUri + escapedName + "\">" + fileLink + "</a>";
         
         // サイズの表示 (ディレクトリの場合は "-" を表示)
         htmlContent += " " + sizeStr;
