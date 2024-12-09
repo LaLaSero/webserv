@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+</head>
+<body>
+    <h1>サンプルコマンドリスト</h1>
+    <p>以下のサンプルコマンドでテスト項目を試してみてください</p>
+    <p>GETメソッドの確認</p>
+    <p>curl -i localhost:8081/docs</p>
+    <p>POSTメソッドによるファイルのアップロードの確認</p>
+    <p>curl -i -X POST -F upfile=@./test.py localhost:8081/docs/upload/</p>
+    <p>DELETEメソッドの確認</p>
+    <p> curl  -v localhost:8081/docs/delete/a.txt -X DELETE</p>
+    <p>AutoIndexの確認</p>
+    <p>curl -i localhost:8081/docs/index/</p>
+    <p>CGIの確認</p>
+    <p>curl -i localhost:8081/docs/cgi-bin/test.py</p>
+    <p>同じポートで違う名前のサーバー</p>
+    <p>curl --resolve defaultserver:2020:0.0.0.0 http://defaultserver:2020/hello/</p>
+    <p>curl --resolve virtualserver:2020:0.0.0.0 http://virtualserver:2020/hello/</p>
+</body>
+</html>
