@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Location.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/25 15:48:46 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/26 17:55:03 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/09 16:47:14 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,7 +45,6 @@ std::map<std::string, std::string> Location::getCgiExtension() const {
 std::string Location::getUploadDirectory() const {
     return upload_directory_;
 }
-
 
 // Setter
 void Location::setPath(const std::string &path) {

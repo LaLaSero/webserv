@@ -49,4 +49,5 @@ class ChildServer
 		void set_request_max(const size_t i);
 		bool server_names_empty() const;
 		void add_location(const Location &loc);
+		const Location& find_location(const std::string& path) const;
 };

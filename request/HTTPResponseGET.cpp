@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponseGET.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:21 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/26 10:27:48 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/09 15:36:57 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

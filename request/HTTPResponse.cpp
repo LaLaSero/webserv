@@ -37,6 +37,11 @@ std::string HTTPResponse::getCurrentTime()
 	return std::string(buffer);
 }
 
+const std::string& HTTPResponse::getMessage() const
+{
+	return message;
+}
+
 void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::string& reasonPhrase, const std::string& message)
 {
 	_statusCode = statusCode;
@@ -46,7 +51,6 @@ void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::s
 			"<p>" + message + "</p></body></html>";
 	makeMessage();
 }
-
 
 void HTTPResponse::setStatusMessage(const std::string& statusMessage)
 {

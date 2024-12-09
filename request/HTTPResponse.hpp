@@ -78,6 +78,8 @@ class HTTPResponse
 		void setHeadersContentType(std::string& true_path);
 		void SetChildServer(const ChildServer *loc);
 		void HelpPostStatusChange(HTTPStatusCode i);
+
+		const std::string& getMessage() const; 
 	private:
 		std::string		_version;
 		std::string		_statusMessage;
