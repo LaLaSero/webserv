@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/09 23:38:28 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/10 14:14:47 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@
 #include"../request/ParseRequest.hpp"
 #include"../cgi/CgiHandler.hpp"
 #include"functions.hpp"
+#include"../request/MethodUtils.hpp"
+
 
 static void prepare_hints(struct addrinfo &hints, int type)
 {
@@ -277,27 +279,35 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
             ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
             response.SetChildServer(&server);
 
-            const Location &location = server.find_location(request.getPath());
-            bool method_allowed = false;
-            const std::vector<std::string> allowed_methods = location.getAcceptedMethods();
-            for (std::vector<std::string>::const_iterator method_it = allowed_methods.begin(); method_it != allowed_methods.end(); ++method_it)
-            {
-              if (*method_it == request.getMethod()) {
-                  method_allowed = true;
-                  break;
-              }
+std::vector<Location>::const_iterator loc_it = find_location(&server, request.getPath());
+
+            // loc_itがendの場合は適切なエラーレスポンスを生成
+            if (loc_it == server.getLocations().end()) {
+              ;
+            } else {
+                // 見つかった場合はイテレーターからLocation参照を取得
+                const Location &location = *loc_it;
+                bool method_allowed = false;
+                const std::vector<std::string> allowed_methods = location.getAcceptedMethods();
+                for (std::vector<std::string>::const_iterator method_it = allowed_methods.begin(); method_it != allowed_methods.end(); ++method_it)
+                {
+                  if (*method_it == request.getMethod()) {
+                      method_allowed = true;
+                      break;
+                  }
+                }
+                if (!method_allowed)
+                {
+                  // more smarter error handling
+                  std::cout << "405" << std::endl;
+                  response.set405Error(request);
+                  client_sock->SetResponse(response.makeBodyResponse()); // クライアントソケットにレスポンスを保存
+                  epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
+                  return ;
+                }
+                else
+                  response.selectResponseMode(request);
             }
-            if (!method_allowed)
-            {
-              // more smarter error handling
-              std::cout << "405" << std::endl;
-              response.set405Error(request);
-              client_sock->SetResponse(response.makeBodyResponse()); // クライアントソケットにレスポンスを保存
-              epoll->GotoNextEvent(fde, kFdeWrite);  // 書き込み準備ができたら書き込みイベントを監視
-              return ;
-            }
-            else
-              response.selectResponseMode(request);
 
             // CGIレスポンスが必要な場合
             if (request.getMode() == CGI_RESPONSE)

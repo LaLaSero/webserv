@@ -36,39 +36,6 @@ const std::map<int, std::string>& ChildServer::get_error_page() const {
     return error_page_;
 }
 
-const Location& ChildServer::find_location(const std::string& path) const
-{
-    const Location* best_match = NULL;
-    size_t best_match_length = 0;
-
-    // 全てのlocationをループ
-    for (std::vector<Location>::const_iterator it = locations_.begin(); it != locations_.end(); ++it) {
-        const std::string& loc_path = it->getPath();
-        // pathがloc_pathで始まるか確認（先頭一致）
-        if (path.find(loc_path) == 0) {
-            // 現在のloc_pathがこれまでで最も長く一致している場合、更新
-            if (loc_path.size() > best_match_length) {
-                best_match = &(*it);
-                best_match_length = loc_path.size();
-            }
-        }
-    }
-
-    // 最長一致のlocationが見つかった場合はそれを返す
-    if (best_match != NULL) {
-        return *best_match;
-    }
-
-    // 一致するlocationがなかった場合、デフォルトlocation("/")を探す
-    for (std::vector<Location>::const_iterator it = locations_.begin(); it != locations_.end(); ++it) {
-        if (it->getPath() == "/") {
-            return *it;
-        }
-    }
-
-    // デフォルトlocationもない場合は例外を投げる
-    throw std::runtime_error("No matching location found and no default location set.");
-}
 
 size_t ChildServer::get_request_max() const {
     return reqbody_size_;
