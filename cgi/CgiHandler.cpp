@@ -3,9 +3,7 @@
 CgiHandler::CgiHandler(HTTPRequest &request) : request_(request)
 {
 	env_vars_["REQUEST_METHOD"] = request_.getMethod();
-	env_vars_["REQUEST_METHOD"] = "GET"; //for test
 	env_vars_["QUERY_STRING"] = request_.getQuery();
-	env_vars_["QUERY_STRING"] = "type=local-redir-response"; //for test
 	env_vars_["SCRIPT_NAME"] = request_.getUri(); 
 	env_vars_["CONTENT_TYPE"] = "test";
 	env_vars_["CONTENT_LENGTH"] = request_.getBody().size();
@@ -134,7 +132,7 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request)
 
 	dup2(output_pipe[1], STDOUT_FILENO);  // output_pipe[1]を標準出力に接続
 	close(output_pipe[0]);
-
+	close(output_pipe[1]);
 
 	std::map<std::string, std::string> env_vars = cgi_handler.getEnvVars();
 	std::vector<char *> envp;
@@ -149,8 +147,8 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request)
 	std::string python_path = "python3";
 	
 	python_path = "/usr/bin/python3"; // for test
-	script_path = "./test.py";	// for test
-	chdir("../cgi-bin");
+	script_path = "test.py";	// for test
+	chdir("./docs/cgi-bin/");
 
 	char *argv[] = {const_cast<char *>(python_path.c_str()), 
 			const_cast<char *>(script_path.c_str()),

@@ -33,7 +33,7 @@ def main():
     else:
         print("Content-Type: text/plain\r\n\r\n", end="")
         print("Unknown response type.")
-    print(request_method);
+    print(request_method)
 
 if __name__ == "__main__":
     main()
