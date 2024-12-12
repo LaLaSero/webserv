@@ -11,6 +11,7 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	else if (method == "POST")
 	{
 		request.setMode(POST_RESPONSE);
+		makeBodyPOST(request);
 	}
 	else if (method == "DELETE")
 	{

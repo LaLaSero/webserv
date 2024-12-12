@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HTTPResponsePOST.cpp                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:26 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/12/04 19:40:35 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/12 17:35:25 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,6 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
         true_path = loc.getUploadDirectory();
     }
   }
-  std::cout << true_path << std::endl;
  	if (access(true_path.c_str(), F_OK) != 0)
 	{
     _statusCode = STATUS_404;
@@ -67,6 +66,8 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
     _contentLength = _body.size();
 		return ;
 	}
+  if (true_path.back() != '/')
+    true_path.push_back('/');
   std::string file_path = true_path + "posted.txt";
  	if (access(file_path.c_str(), F_OK) == 0)
 	{

@@ -116,7 +116,7 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
 {
   std::vector<FdandEvent> fdee_vec;
 
-  std::cout << registered_fd_events_.size() << std::endl;
+  // std::cout << registered_fd_events_.size() << std::endl;
   long current_time = GetNowTime();
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {
