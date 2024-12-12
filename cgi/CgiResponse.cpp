@@ -75,42 +75,39 @@ std::string ParseCGIResponse(const std::string &response)
 
 	std::string response_type = DetermineResponseType(headers, body_part);
 
+	result = "HTTP/1.1 ";
 	if (response_type == "document-response")
 	{
-		result = "Document Response detected.\n";// for debug
-		result += "Status: " + headers["Status"] + "200 OK" + "\n";
-		result += "Content-Type: " + headers["Content-Type"] + "\n";
-		result += "Body: " + body_part + "\n";
+		result += "200 OK\r\n";
+		result += "Content-Type: " + headers["Content-Type"] + "\r\n";
+		result += "\r\n" + body_part;
 	}
 	else if (response_type == "local-redir-response")
 	{
-		result = "Local Redirect Response detected.\n";// for debug
-
 		std::string location = headers["Location"];
 		if (location.empty())
 		{
-			result += "Location header not found.\n";
+			result += "400 Bad Request\r\n\r\nLocation header not found.\n";
 		}
 		else
 		{
-			result += "Location: " + location + "\n";
+			result += "302 Found\r\n";
+			result += "Location: " + location + "\r\n\r\n";
 		}
 	}
 	else if (response_type == "client-redir-response")
 	{
-		result = "Client Redirect Response detected.\n";// for debug
 		result += "Location: " + headers["Location"] + "\n";
 	}
 	else if (response_type == "client-redirdoc-response")
 	{
-		result = "Client Redirect with Document Response detected.\n";// for debug
 		result += "Location: " + headers["Location"] + "\n";
 		result += "Body: " + body_part + "\n";
 
 	}
 	else
 	{
-		result = "Unknown response type.\n";
+		result = "500 Internal Server Error\r\n\r\nUnknown response type.\n";
 	}
 	return result;
 }
