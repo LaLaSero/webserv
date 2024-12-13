@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:26 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/12/12 17:35:25 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/13 18:14:17 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,8 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
 
   if (is_max_over(request.getBody(), _server->get_request_max()))
   {
-    _statusCode = STATUS_400;
-		_body = get_error_page(_statusCode, _server, EP400);
+    _statusCode = STATUS_413;
+		_body = get_error_page(_statusCode, _server, EP413);
     _contentLength = _body.size();
 		return ;
   }

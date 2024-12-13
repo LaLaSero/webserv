@@ -14,10 +14,15 @@
     <p>curl -i -X POST -F upfile=@./test.py localhost:8081/docs/upload/</p>
     <p>DELETEメソッドの確認</p>
     <p> curl  -v localhost:8081/docs/delete/a.txt -X DELETE</p>
+    <p>不適切なメソッドの確認</p>
+    <p>curl -X FOO localhost:8081/docs</p>
+    <p>ボディサイズを超えるリクエスト</p>
+    <p>curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something short or long than body limit" localhost:8081/docs/upload/</p>
     <p>AutoIndexの確認</p>
     <p>curl -i localhost:8081/docs/index/</p>
     <p>CGIの確認</p>
-    <p>curl -i localhost:8081/docs/cgi-bin/test.py</p>
+    <p>curl -i "localhost:8081/docs/cgi-bin/test.py?type=document-response"</p>
+    <p></p>
     <p>同じポートで違う名前のサーバー</p>
     <p>curl --resolve defaultserver:2020:0.0.0.0 http://defaultserver:2020/hello/</p>
     <p>curl --resolve virtualserver:2020:0.0.0.0 http://virtualserver:2020/hello/</p>
