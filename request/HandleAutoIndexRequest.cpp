@@ -154,15 +154,27 @@ std::string formatSize(off_t size) {
     return std::string(sizeStr);
 }
 
+std::string computeParentUri(const std::string& uri)
+{
+    if (uri.empty() || uri == "/") return "/";
+    std::string temp = uri;
+    if (temp.back() == '/') temp.pop_back();
+    size_t pos = temp.find_last_of('/');
+    if (pos == std::string::npos) return "/";
+    if (pos == 0) return "/";
+    return temp.substr(0, pos) + "/";
+}
+
 std::string HTTPResponse::generateAutoIndexHTML(const std::vector<FileInfo>& fileList, const std::string& uri) 
 {
     std::string htmlContent;
     
+    std::string parentUri = computeParentUri(uri);
+
     // HTMLのヘッダー部分
     htmlContent += "<html><head><title>Index of " + uri + "</title></head><body>";
     htmlContent += "<h1>Index of " + uri + "</h1>";
-    htmlContent += "<hr><pre><a href=\"../\">../</a>\n";
-
+    htmlContent += "<hr><pre><a href=\"" + parentUri + "\">../</a>\n";
     // ファイルリストをリスト形式で追加
     for (size_t i = 0; i < fileList.size(); ++i) {
         const FileInfo& file = fileList[i];
