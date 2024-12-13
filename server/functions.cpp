@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/10 14:14:47 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/13 17:56:25 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,7 +292,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 						break;
 					}
 				}
-				if (!method_allowed)
+				if (!method_allowed && (request.getMethod() == "GET" || request.getMethod() == "POST" || request.getMethod() == "DELETE"))
 				{
 					// more smarter error handling
 					std::cout << "405" << std::endl;
