@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/15 01:27:09 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/15 02:13:30 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -424,7 +424,7 @@ void set_up_server(EpollAdm &epoll, Config &conf)
 		std::string port_any_ip = "0.0.0.0:" + it->get_listen_port_();
 		if (std::find(used_ip_ports.begin(), used_ip_ports.end(), ip_port) != used_ip_ports.end() ||
 			std::find(used_ip_ports.begin(), used_ip_ports.end(), port_any_ip) != used_ip_ports.end())
-			continue;
+			throw std::runtime_error("Duplicate listen IP and port detected: " + ip_port);
 		// // ソケットアドレスを作成
 		SocketAddress socket_address;
 		// // ソケットを作成し、リッスン状態にする
