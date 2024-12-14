@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   MethodUtils.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/24 20:00:39 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/11/26 16:26:12 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/13 18:13:32 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,3 +70,4 @@ bool is_max_over(const std::string status, size_t max);
 #define EP403 "<html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>"
 #define EP404  "<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1><p>The requested URL was not found on this server.</p></body></html>"
 #define EP500  "<html><head><title>500 Internal Server </title></head><body><h1>500 Internal Server </h1></body></html>"
+#define EP413 "<html><head><title>413 Payload Too Large</title></head><body><h1>413 Payload Too Large</h1><p>The request entity is larger than limits defined by server.</p></body></html>"
