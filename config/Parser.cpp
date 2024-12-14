@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
+/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 14:35:31 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/11/26 17:59:37 by ryanagit         ###   ########.fr       */
+/*   Updated: 2024/12/15 02:24:42 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,6 +227,10 @@ void Parser::ParseCLMAX(ChildServer &serv, std::string &line)
 	std::string limit;
 	limit = line.substr(line.find(' ')+ 1);
 	limit.erase(limit.size() - 1);;
+	if (limit.size() == 0)
+		throw std::runtime_error("ParseCLMAX: Empty");
+	if (max_stos(limit) == 0)
+		throw std::runtime_error("ParseCLMAX: Zero");
 	serv.set_request_max(max_stos(limit));
 }
 
