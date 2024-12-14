@@ -1,4 +1,5 @@
 #include "HTTPRequest.hpp"
+#include <stdexcept> 
 
 HTTPRequest::HTTPRequest()
 	: _method(""), _uri(""), _version(""), _path(""), _query(""), _host(""), _port("80"), _body(""), _location(), _mode(0),errorno_(0)
@@ -122,12 +123,11 @@ void HTTPRequest::setHeaders(const std::pair<std::string, std::string>& header)
 
 std::string HTTPRequest::getHeader(const std::string& key) const
 {
-	std::map<std::string, std::string>::const_iterator it = _headers.find(key);
-	if (it != _headers.end())
-		return it->second;
-	return "";
+    std::map<std::string, std::string>::const_iterator it = _headers.find(key);
+    if (it != _headers.end())
+        return it->second;
+    return "";
 }
-
 const std::string& HTTPRequest::getBody() const
 {
 	return _body;
@@ -183,30 +183,65 @@ void  HTTPRequest::set_errorno_(const int i)
     errorno_ = i; 
 }
 
+// size_t HTTPRequest::getContentLength() const
+// {
+//     // "Content-Length" ヘッダーが存在するか確認
+//     auto it = _headers.find("Content-Length");
+    
+//     // 見つかった場合、その値を size_t 型に変換して返す
+//     if (it != _headers.end())
+//     {
+//         try
+//         {
+//             return std::stoull(it->second);  // string を size_t に変換
+//         }
+//         catch (const std::invalid_argument& e)
+//         {
+//             // Content-Length が無効な場合、デフォルト値 0 を返す
+//             return 0;
+//         }
+//         catch (const std::out_of_range& e)
+//         {
+//             // 範囲外の場合もデフォルト値 0 を返す
+//             return 0;
+//         }
+//     }
+    
+//     // Content-Length が存在しなければデフォルト値 0 を返す
+//     return (-1);
+// }
+
 size_t HTTPRequest::getContentLength() const
 {
-    // "Content-Length" ヘッダーが存在するか確認
-    auto it = _headers.find("Content-Length");
-    
-    // 見つかった場合、その値を size_t 型に変換して返す
-    if (it != _headers.end())
-    {
-        try
-        {
-            return std::stoull(it->second);  // string を size_t に変換
-        }
-        catch (const std::invalid_argument& e)
-        {
-            // Content-Length が無効な場合、デフォルト値 0 を返す
-            return 0;
-        }
-        catch (const std::out_of_range& e)
-        {
-            // 範囲外の場合もデフォルト値 0 を返す
-            return 0;
-        }
-    }
-    
-    // Content-Length が存在しなければデフォルト値 0 を返す
-    return (-1);
+	// "Content-Length" ヘッダーが存在するか確認
+	std::map<std::string, std::string>::const_iterator it = _headers.find("Content-Length");
+
+	// 見つかった場合、その値を size_t 型に変換して返す
+	if (it != _headers.end())
+	{
+		try
+		{
+			std::stringstream ss(it->second);
+			size_t contentLength = 0;
+			ss >> contentLength;
+			
+			// 変換が失敗した場合、例外を投げる
+			if (ss.fail())
+				throw std::invalid_argument("Invalid Content-Length value");
+			
+			return contentLength;
+		}
+		catch (const std::invalid_argument& e)
+		{
+			// Content-Length が無効な場合、デフォルト値 0 を返す
+			return 0;
+		}
+		catch (const std::out_of_range& e)
+		{
+			// 範囲外の場合もデフォルト値 0 を返す
+			return 0;
+		}
+	}
+	// Content-Length が存在しなければデフォルト値 0 を返す
+	return 0;
 }

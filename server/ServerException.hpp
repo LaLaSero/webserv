@@ -3,8 +3,9 @@
 
 #include <exception>
 #include <string>
-#include <unordered_map>
+// #include <unordered_map>
 #include <sstream>
+#include <map>
 
 #define HTTP_OK 200
 #define HTTP_BAD_REQUEST 400
@@ -38,7 +39,7 @@ class ServerException : public std::exception
 			return _message;
 		}
 
-		const std::unordered_map<std::string, std::string>& getHeaders() const
+		const std::map<std::string, std::string>& getHeaders() const
 		{
 			return _headers;
 		}
@@ -55,7 +56,7 @@ class ServerException : public std::exception
 		int _statusCode;
 		std::string _message;
 		std::string _fullMessage;
-		std::unordered_map<std::string, std::string> _headers;
+		std::map<std::string, std::string> _headers;
 
 };
 

@@ -23,28 +23,29 @@ bool HTTPResponse::isAutoIndexEnabled(HTTPRequest& request)
 	return false;
 }
 
-void HTTPResponse::makeBodyAutoIndex(std::string files, std::string uri, std::stringstream& ss)
-{
-	// Location location;
-	// 自動インデックスの処理
-}
+// void HTTPResponse::makeBodyAutoIndex(std::string files, std::string uri, std::stringstream& ss)
+// {
+// 	// Location location;
+// 	// 自動インデックスの処理
+// }
 
 bool HTTPResponse::isDirectoryRequest(HTTPRequest& request)
 {
 	// (void)request;
 	// リクエストされたURIがディレクトリかどうか
+    (void)request;
 	return false;
 }
 
 bool HTTPResponse::hasTrailingSlash(const std::string& uri) const
 {
-	return !uri.empty() && uri.back() == '/';
+	return !uri.empty() && uri[uri.size() - 1] == '/';
 }
 
 void HTTPResponse::redirectToTrailingSlash(const HTTPRequest& request)
 {
 	std::string uri = request.getUri();
-	if (uri.back() != '/') {
+	if (uri[uri.size() - 1] != '/') {
 		uri += "/";
 	}
 	_statusCode = STATUS_301;
@@ -158,7 +159,9 @@ std::string computeParentUri(const std::string& uri)
 {
     if (uri.empty() || uri == "/") return "/";
     std::string temp = uri;
-    if (temp.back() == '/') temp.pop_back();
+    if (temp[temp.size() - 1] == '/')
+        temp.erase(temp.size() - 1);
+    // temp.pop_back();
     size_t pos = temp.find_last_of('/');
     if (pos == std::string::npos) return "/";
     if (pos == 0) return "/";
@@ -191,7 +194,7 @@ std::string HTTPResponse::generateAutoIndexHTML(const std::vector<FileInfo>& fil
         // ディレクトリの場合は末尾に '/' を付加
         std::string fileLink = (file.size == 0) ? escapedName + "/" : escapedName;
         std::string linkUri = uri;
-        if (!linkUri.empty() && linkUri.back() != '/') {
+        if (!linkUri.empty() && linkUri[linkUri.size() - 1] != '/') {
             linkUri += "/";
         }
 

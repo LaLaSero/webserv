@@ -17,7 +17,7 @@
 // 	return _message;
 // }
 
-// const std::unordered_map<std::string, std::string>& ServerException::getHeaders() const
+// const std::map<std::string, std::string>& ServerException::getHeaders() const
 // {
 // 	return _headers;
 // }

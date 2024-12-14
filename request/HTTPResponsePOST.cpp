@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 19:58:26 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/12/13 18:14:17 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/15 01:09:20 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
     _contentLength = _body.size();
 		return ;
 	}
-  if (true_path.back() != '/')
+  if (true_path[true_path.size() - 1] != '/')
     true_path.push_back('/');
   std::string file_path = true_path + "posted.txt";
  	if (access(file_path.c_str(), F_OK) == 0)

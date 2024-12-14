@@ -9,7 +9,7 @@ class RequestLineState : public IParseState
 		int errorno_;
 	public:
 		virtual ~RequestLineState() {};
-		IParseState* handle(ParseRequest& parser, std::stringstream& ss) override;
+		IParseState* handle(ParseRequest& parser, std::stringstream& ss);
 };
 
 #endif

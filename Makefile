@@ -1,7 +1,6 @@
 # コンパイラとフラグ
 CXX = c++
-# CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-
+CXXFLAGS =  -std=c++98 -Wall -Wextra -Werror
 # 出力ファイル名
 NAME = webserv
 

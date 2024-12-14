@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/13 17:56:25 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/15 01:27:09 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,6 +173,7 @@ void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollA
 		epoll->delete_event(fde);
 		close(fde->fd);
 	}
+	(void)data;
 }
 
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
@@ -218,21 +219,21 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		epoll->delete_event(fde);
 		delete fde;
 	}
+	(void)data;
 }
 
-bool try_makefile(const std::string &body, const std::string dir_path)
+bool try_makefile(const std::string &body, const std::string &dir_path)
 {
 	std::string file_data = body;
 	std::string save_path = dir_path + "posted.txt";
-
-	std::ofstream file(save_path, std::ios::binary);
+	std::ofstream file(save_path.c_str(), std::ios::binary);
 	if (!file.is_open())
-		return (false);
+		return false;
 	file.write(file_data.c_str(), file_data.size());
 	file.close();
 	if (!file)
-		return (false);
-	return (true);
+		return false;
+	return true;
 }
 
 void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
@@ -248,7 +249,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		int conn_fd = client_sock->GetFd();
 		ssize_t n = read(conn_fd, buf, sizeof(buf) - 1);
 		buf[n] = '\0'; // Null-terminate the string
+		// std::cout <<"---------------"<<std::endl;
 		std::cout << buf << std::endl;
+		// std::cout <<"---------------"<<std::endl;
 
 		if (n <= 0)
 		{

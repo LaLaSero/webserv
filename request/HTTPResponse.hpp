@@ -83,19 +83,17 @@ class HTTPResponse
 
 		const std::string& getMessage() const; 
 	private:
+		const Config&	_config;
 		std::string		_version;
+		bool			_keepAlive;
+		std::string		_body;
+		HTTPStatusCode	_statusCode;
+		const ChildServer *_server;
+
 		std::string		_statusMessage;
 		std::string		_statusLine;
-		bool			_keepAlive;
 		size_t			_contentLength;
-		std::string		_body;
 		std::string		message;
-
-		HTTPStatusCode	_statusCode;
-
-		const Config&	_config;
-
-		const ChildServer *_server;
 
 		std::map<std::string, std::string> 		_headers;
 		std::map<HTTPStatusCode, std::string>	_statusMessageMap;
