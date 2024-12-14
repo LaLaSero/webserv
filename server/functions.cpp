@@ -326,7 +326,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					return;
 				}
 				else if (pid == 0) // 子プロセス（CGI）
-					ExecuteChildCGI(output_pipe, request);
+					ExecuteChildCGI(output_pipe, request, *loc_it);
 				else // 親プロセス（サーバー）
 				{
 					// 親プロセス側でpipeの読み書きイベントをepollに登録
