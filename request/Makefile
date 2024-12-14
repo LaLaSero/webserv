@@ -22,7 +22,7 @@ SRC = main.cpp\
 OBJ = $(SRC:.cpp=.o)
 CXX = c++
 RM = rm -f
-CXXFLAGS = 
+CXXFLAGS = -g
 # -Wall -Wextra -Werror -std=c++98
 
 NAME = webserv

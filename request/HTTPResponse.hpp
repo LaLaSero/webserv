@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <dirent.h>
 #include "../config/Config.hpp"
+#include <sstream>
 
 #ifndef SERVER_NAME
 #define SERVER_NAME "webserv"

@@ -4,6 +4,7 @@
 #include <exception>
 #include <string>
 #include <unordered_map>
+#include <sstream>
 
 #define HTTP_OK 200
 #define HTTP_BAD_REQUEST 400
@@ -20,7 +21,9 @@ class ServerException : public std::exception
 	public:
 		ServerException(int statusCode, const std::string& message): _statusCode(statusCode), _message(message)
 		{
-			_fullMessage = "HTTP Error " + std::to_string(_statusCode) + ": " + _message;
+			std::ostringstream oss;
+			 oss << _statusCode;
+			_fullMessage = "HTTP Error " + oss.str() + ": " + _message;
 		}
 
 		virtual ~ServerException() throw() {}

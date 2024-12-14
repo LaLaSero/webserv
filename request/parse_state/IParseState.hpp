@@ -8,7 +8,7 @@ class ParseRequest;
 class IParseState
 {
 	public:
-		virtual ~IParseState() = default;
+		virtual ~IParseState() {};
 		virtual IParseState* handle(ParseRequest& parser, std::stringstream& ss) = 0;
 };
 

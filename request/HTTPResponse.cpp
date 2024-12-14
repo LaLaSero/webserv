@@ -44,10 +44,15 @@ const std::string& HTTPResponse::getMessage() const
 
 void HTTPResponse::generateErrorResponse(HTTPStatusCode statusCode, const std::string& reasonPhrase, const std::string& message)
 {
+	std::ostringstream oss;
+	oss << statusCode;
+
+	std::string statusCodeStr = oss.str();
+
 	_statusCode = statusCode;
 	_statusMessage = reasonPhrase;
-	_body = "<html><head><title>" + std::to_string(statusCode) + " " + reasonPhrase + "</title></head>"
-			"<body><h1>" + std::to_string(statusCode) + " " + reasonPhrase + "</h1>"
+	_body = "<html><head><title>" + statusCodeStr + " " + reasonPhrase + "</title></head>"
+			"<body><h1>" + statusCodeStr + " " + reasonPhrase + "</h1>"
 			"<p>" + message + "</p></body></html>";
 	makeMessage();
 }
@@ -62,9 +67,14 @@ void HTTPResponse::setHeader(const std::string& key, const std::string& value)
 	_headers[key] = value;
 }
 
+
 void HTTPResponse::setStatusline()
 {
-	_statusLine = _version + " " + std::to_string(_statusCode) + " " + _statusMessageMap[_statusCode] + "\r\n";
+	std::ostringstream oss;
+	oss << _statusCode;
+
+	std::string statusCodeStr = oss.str();
+	_statusLine = _version + " " + statusCodeStr + " " + _statusMessageMap[_statusCode] + "\r\n";
 }
 
 void HTTPResponse::makeMessage()
@@ -78,7 +88,9 @@ void HTTPResponse::makeMessage()
 	setHeader("Date", getCurrentTime());
 	setHeader("Server", SERVER_NAME);
 	setHeader("Content-Type", "text/html");
-	setHeader("Content-Length", std::to_string(_body.size()));
+	std::ostringstream oss;
+	oss << _body.size();
+	setHeader("Content-Length", oss.str());
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 		message += it->first + ": " + it->second + "\r\n";
 	message += "\r\n";
