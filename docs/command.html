@@ -4,27 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        .command {
+            font-family: "Courier New", Courier, monospace;
+            background-color: #e8e8e8;
+            padding: 5px;
+            border-radius: 3px;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>サンプルコマンドリスト</h1>
     <p>以下のサンプルコマンドでテスト項目を試してみてください</p>
+    <p>ループバックアドレスの設定</p>
+    <p class="command">sudo ip addr add 127.0.0.2/8 dev lo</p>
     <p>GETメソッドの確認</p>
-    <p>curl -i localhost:8081/docs</p>
+    <p class="command">curl -i localhost:8081/docs</p>
     <p>POSTメソッドによるファイルのアップロードの確認</p>
-    <p>curl -i -X POST -F upfile=@./test.py localhost:8081/docs/upload/</p>
+    <p class="command">curl -i -X POST -F upfile=@./test.py localhost:8081/docs/upload/</p>
     <p>DELETEメソッドの確認</p>
-    <p> curl  -v localhost:8081/docs/delete/a.txt -X DELETE</p>
+    <p class="command">curl  -v localhost:8081/docs/delete/a.txt -X DELETE</p>
     <p>不適切なメソッドの確認</p>
-    <p>curl -X FOO localhost:8081/docs</p>
+    <p class="command">curl -X FOO localhost:8081/docs</p>
     <p>ボディサイズを超えるリクエスト</p>
-    <p>curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something short or long than body limit" localhost:8081/docs/upload/</p>
+    <p class="command">curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something short or long than body limit" localhost:8081/docs/upload/</p>
     <p>AutoIndexの確認</p>
-    <p>curl -i localhost:8081/docs/index/</p>
+    <p class="command">curl -i localhost:8081/docs/index/</p>
     <p>CGIの確認</p>
-    <p>curl -i "localhost:8081/docs/cgi-bin/test.py?type=document-response"</p>
-    <p></p>
-    <p>同じポートで違う名前のサーバー</p>
-    <p>curl --resolve defaultserver:2020:0.0.0.0 http://defaultserver:2020/hello/</p>
-    <p>curl --resolve virtualserver:2020:0.0.0.0 http://virtualserver:2020/hello/</p>
+    <p class="command">curl -i "localhost:8081/docs/cgi-bin/test.py?type=document-response"</p>
+    <p>同じポートで異なるホスト名のサーバー</p>
+    <p class="command">curl --resolve defaultserver:2020:127.0.0.1 http://defaultserver:2020/hello/</p>
+    <p class="command">curl --resolve virtualserver:2020:127.0.0.2 http://virtualserver:2020/hello/ </p>
+    <p>存在しないhostnameの時</p>
+    <p class="command">curl --resolve unkonwe:2020:0.0.0.0 http://unkonwe:2020/hello/</p>
 </body>
 </html>
