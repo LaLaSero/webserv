@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/15 02:13:30 by yutakagi         ###   ########.fr       */
+/*   Updated: 2024/12/15 17:56:33 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -420,23 +420,23 @@ void set_up_server(EpollAdm &epoll, Config &conf)
 			it->set_listen_ip_("0.0.0.0");
 		if (it->get_listen_port_().empty())
 			it->set_listen_port_("8080");
-		std::string ip_port = it->get_listen_port_();
-		std::string port_any_ip = "0.0.0.0:" + it->get_listen_port_();
-		if (std::find(used_ip_ports.begin(), used_ip_ports.end(), ip_port) != used_ip_ports.end() ||
-			std::find(used_ip_ports.begin(), used_ip_ports.end(), port_any_ip) != used_ip_ports.end())
-			throw std::runtime_error("Duplicate listen IP and port detected: " + ip_port);
-		// // ソケットアドレスを作成
+		std::string ip_port = it->get_listen_ip_() + ":" + it->get_listen_port_();
+		if (std::find(used_ip_ports.begin(), used_ip_ports.end(), ip_port) != used_ip_ports.end())
+		{
+			throw std::runtime_error("duplicate host name and port: " + it->get_listen_ip_() + ":" + it->get_listen_port_());
+		}
+		// ソケットアドレスを作成
 		SocketAddress socket_address;
-		// // ソケットを作成し、リッスン状態にする
+		// ソケットを作成し、リッスン状態にする
 		int fd = InetListen(it->get_listen_ip_(), it->get_listen_port_(), SOMAXCONN, &socket_address);
 		if (fd < 0)
 			throw std::runtime_error("InetListen Error");
-		// // // ソケットを`EpollAdm`に登録
+		// ソケットを`EpollAdm`に登録
 		ListenSocket *listen_sock = new ListenSocket(fd, socket_address, conf);
 		FdEvent *fde = CreateFdEvent(fd, HandleListenSocketEvent, listen_sock);
 		epoll.register_event(fde);
 		epoll.Add(fde, kFdeRead); // 読み込みイベントを監視対象にする
-		// // // 使用済みのIPとポートの組み合わせを記録
+		// 使用済みのIPとポートの組み合わせを記録
 		used_ip_ports.push_back(ip_port);
 		opened_fd.push_back(fd);
 

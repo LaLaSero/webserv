@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include"EpollAdm.hpp"
+#include "EpollAdm.hpp"
+#include "ServerException.hpp"
 
 long GetNowTime() {
   timeval tv;
@@ -45,14 +46,19 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
   if (epev.events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) 
   {
     if (epev.events & EPOLLERR)
-        throw std::exception();
+    {
+      throw ServerException(HTTP_INTERNAL_SERVER_ERROR, "Epoll error occurred");
+    }
     if (epev.events & EPOLLHUP)
-        throw std::exception();
+    {
+      throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll hang up occurred");
+    }
     if (epev.events & EPOLLRDHUP) 
-        throw std::exception();
+    {
+      throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll read hang up occurred");
+    }
     events |= kFdeRead | kFdeError;
   }
-
   FdandEvent fdee;
   fdee.fde = fde;
   fdee.events = events;
