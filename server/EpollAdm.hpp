@@ -48,7 +48,7 @@ struct FdEvent {
 
   void *data;
 
- ClientSocket *original_clinet;
+ ClientSocket *original_client;
 };
 
 struct FdandEvent {
@@ -57,7 +57,7 @@ struct FdandEvent {
   unsigned int events;
 };
 
-
+long GetNowTime();
 
 class EpollAdm
 {

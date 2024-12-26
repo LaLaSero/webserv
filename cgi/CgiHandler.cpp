@@ -151,25 +151,21 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location)
 	}
 	envp.push_back(NULL);
 
-	std::string script_name = env_vars["SCRIPT_NAME"];
-	std::string python_path = "python3";
-	
-	python_path = "/usr/bin/python3"; // for test
+	std::string script_file_name;	
+	std::string python_path = "/usr/bin/python3";
 
 	std::string uri = request.getUri();
 	size_t pos = uri.find_last_of('/');
 	if (pos != std::string::npos)
 	{
-		script_name = uri.substr(pos + 1);
+		script_file_name = uri.substr(pos + 1);
 	}
-	pos = script_name.find("?");
+	pos = script_file_name.find("?");
 	if (pos != std::string::npos)
 	{
-		script_name = script_name.substr(0, pos);
+		script_file_name = script_file_name.substr(0, pos);
 	}
 
-	std::cerr << "uri: " << request.getUri() << std::endl;
-	std::cerr << "script_name: " << env_vars["SCRIPT_NAME"] << std::endl;
 	std::string cgi_dir_head = location.getRootDirectory();
 	std::string cgi_dir_tail = request.getLocation().getPath() + "cgi-bin/";
 	cgi_dir_head.erase(cgi_dir_head.length() - 1);
@@ -181,8 +177,14 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location)
 		std::exit(1);
 	}
 
+	if (access(script_file_name.c_str(), F_OK) == -1)
+	{
+		perror("access");
+		std::cerr << "404 Not Found" << std::endl;
+		std::exit(1);
+	}
 	char *argv[] = {const_cast<char *>(python_path.c_str()), 
-			const_cast<char *>(script_name.c_str()),
+			const_cast<char *>(script_file_name.c_str()),
 			NULL};
 	execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
 
