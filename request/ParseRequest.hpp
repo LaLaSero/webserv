@@ -17,7 +17,7 @@ class ParseRequest
 		~ParseRequest();
 
 		void clear();
-		void parse(char *buffer);
+		void parse(const char *buffer);
 
 		bool readRequestLine(std::stringstream &ss);
 		bool readHeaders(std::stringstream &ss);
@@ -29,6 +29,9 @@ class ParseRequest
 
 		bool isFinished() const;
 		void setFinished(bool finished);
+		// size_t getContentLength() const { return _contentLength; }
+		// const std::string& getBody() const { return _request.getBody(); }
+		
 	private:
 		HTTPRequest &_request;
 		bool _isChunked;

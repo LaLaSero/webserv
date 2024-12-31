@@ -166,10 +166,10 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
         FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
         fde->last_active = GetNowTime();
-		std::cerr << "-----Debug-------" << std::endl;
-		std::cerr << "CheckEvents occurred fd:" << fde->fd <<std::endl;
-		std::cerr << "current_time:" << fde->last_active << std::endl;
-		std::cerr << "update last_active" << std::endl;
+		// std::cerr << "-----Debug-------" << std::endl;
+		// std::cerr << "CheckEvents occurred fd:" << fde->fd <<std::endl;
+		// std::cerr << "current_time:" << fde->last_active << std::endl;
+		// std::cerr << "update last_active" << std::endl;
     }
     return fdee_vec;
 }

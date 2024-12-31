@@ -72,6 +72,8 @@ void HTTPResponse::makeBodyPOST(HTTPRequest& request)
  	if (access(file_path.c_str(), F_OK) == 0)
 	{
     _statusCode = STATUS_200;
+    _body = "<html><head><title>200 OK</title></head><body><h1>200 OK</h1><p>File uploaded successfully</p></body></html>";
+    _contentLength = _body.size();
     return ;
 	}
 	std::string body = request.getBody();

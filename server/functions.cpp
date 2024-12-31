@@ -109,7 +109,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 	FdEvent *fde = new FdEvent();
 	fde->fd = fd;
 	fde->func = func;
-	fde->timeout_ms = 0;
+	fde->timeout_ms = 1000;
 	fde->data = data;
 	fde->state = 0;
 	fde->original_client = NULL;
@@ -287,30 +287,49 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	// 読み込みイベントの処理
 	if (events & kFdeRead)
 	{
-		std::cout << "start reading" << std::endl;
+		std::cout << "---start reading buf---" << std::endl;
 		char buf[BUF_SIZE];
 		int conn_fd = client_sock->GetFd();
 		ssize_t n = read(conn_fd, buf, sizeof(buf) - 1);
-		buf[n] = '\0'; // Null-terminate the string
-		// std::cout <<"---------------"<<std::endl;
-		std::cout << buf << std::endl;
-		// std::cout <<"---------------"<<std::endl;
-
+		if (n > 0)
+		{
+			buf[n] = '\0'; // Null-terminate the string
+			client_sock->AppendRecvBuffer(buf, n);
+			std::string recvBuffer = client_sock->GetRecvBuffer();
+			std::cout << recvBuffer << std::endl;
+		}
+		std::cout << "---end reading buf---" << std::endl;
 		if (n <= 0)
 		{
 			// EOF (TCP flag FIN) or Error
 			client_sock->SetIsShutdown(true);
 			should_close_client = true;
 		}
-
-		// HTTPリクエストの解析
 		HTTPRequest request;
 		ParseRequest parser_request(request);
-		parser_request.parse(buf);
-
-		should_close_client = true;
-		if (should_close_client || (request.getContentLength() > 0 && request.getBody().size() >= request.getContentLength()))
+		const char *buffer = client_sock->GetRecvBuffer().c_str();
+		parser_request.parse(buffer);
+		if (parser_request.isFinished())
 		{
+			// std::cout << ">>>>>>>>>>>>finished<<<<<<<<<<<<<" << std::endl;
+			should_close_client = true;
+		}
+
+		// should_close_client = true;
+		// std::cout << "################should_close_client: " << should_close_client << "################" << std::endl;
+		if (should_close_client)
+		{
+			// HTTPリクエストの解析
+			HTTPRequest request;
+			ParseRequest parser_request(request);
+			const char *buffer = client_sock->GetRecvBuffer().c_str();
+			// std::cout << "------------------buffer: " << buffer << std::endl;
+			// std::cout <<"----------buffer--------"<<std::endl;
+			parser_request.parse(buffer);
+			// if (parser_request.isFinished())
+			// 	std::cout << ">>>>>>>>>>>>parse finished<<<<<<<<<<<<<" << std::endl;
+			// else
+			// 	std::cout << ">>>>>>>>>>>>parse not finished<<<<<<<<<<<<<" << std::endl;
 			// HTTPレスポンスの準備
 			HTTPResponse response(epoll->get_config());
 			const std::string &hostname = request.getHost();
@@ -420,6 +439,15 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		// 書き込み完了後に接続をクローズ
 		epoll->delete_event(fde);
 		delete client_sock;
+	}
+
+	if (events & kFdeTimeout)
+	{
+		std::cerr << "Timeout on client socket" << std::endl;
+		// epoll->delete_event(fde);
+		// close(fde->fd);
+		// delete fde;
+		// delete client_sock;
 	}
 
 	if (events & kFdeError)

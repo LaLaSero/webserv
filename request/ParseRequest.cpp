@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 ParseRequest::ParseRequest(HTTPRequest &request): _request(request), _isChunked(false), _contentLength(0),
-	_currentState(NULL), _chunkSize(0), _isChunkSizeExpected(false)
+	_currentState(NULL), _chunkSize(0), _isChunkSizeExpected(false), _isFinished(false)
 {
 	_currentState = new RequestLineState();
 }
@@ -35,7 +35,7 @@ HTTPRequest &ParseRequest::getRequest() const
 	return _request;
 }
 
-void ParseRequest::parse(char *buffer)
+void ParseRequest::parse(const char *buffer)
 {
 	std::stringstream bufferStream(buffer);
 
@@ -173,8 +173,14 @@ void ParseRequest::finalize()
 {
 	if (_request.getHeader("Host").empty())
 		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
+	// std::cout << ">>>>>>>>>>>>finalize<<<<<<<<<<<<<" << std::endl;
+	// std::cout << ">>>>>>>>>>>>_contentLength: " << _contentLength << "<<<<<<<<<<<<<" << std::endl;
+	// std::cout << ">>>>>>>>>>>>_request.getBody().size(): " << _request.getBody().size() << "<<<<<<<<<<<<<" << std::endl;
+	if (_contentLength > 0 && _request.getBody().size() < _contentLength)
+		setFinished(false);
 	if (_contentLength > 0 && _request.getBody().size() != _contentLength)
 		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
+	setFinished(true);
 }
 
 int ParseRequest::getlineWithCRLF(std::stringstream &ss, std::string &line)
@@ -246,6 +252,16 @@ bool ParseRequest::isHex(const std::string& str)
 	}
 	return true;
 }
+
+// size_t ParseRequest::getContentLength() const
+// {
+// 	return _contentLength;
+// }
+
+// const std::string& ParseRequest::getBody() const
+// {
+// 	return _request.getBody();
+// }
 
 int ParseRequest::ft_stoi(const std::string& str)
 {
