@@ -129,6 +129,13 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
     FdEvent *fde = it->second;
     if (fde->state / kFdeTimeout && current_time - fde->last_active > fde->timeout_ms) 
     {
+		std::cerr << "\x1b[38;2;10;20;30mDebug" << std::endl;
+		std::cerr << "Timeout occurred fd:" << fde->fd <<std::endl;
+		std::cerr << "current_time:" << current_time << std::endl;
+		std::cerr << "last_active:" << fde->last_active << std::endl;
+		std::cerr << "timeout_ms:" << fde->timeout_ms << std::endl;
+		std::cerr << "\x1b[0m" << std::endl;
+
       FdandEvent fdee;
       fdee.fde = fde;
       fdee.events = kFdeTimeout | kFdeRead;
@@ -159,6 +166,10 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
         FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
         fde->last_active = GetNowTime();
+		std::cerr << "-----Debug-------" << std::endl;
+		std::cerr << "CheckEvents occurred fd:" << fde->fd <<std::endl;
+		std::cerr << "current_time:" << fde->last_active << std::endl;
+		std::cerr << "update last_active" << std::endl;
     }
     return fdee_vec;
 }

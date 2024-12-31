@@ -27,6 +27,7 @@ public:
 	void setRequestBody(const std::string &body);
 	bool is_valid_root_and_executer_cgi();
 	std::map<std::string, std::string> getEnvVars() const;
+	std::vector<char *> makeEnvp() const;
 };
 
 void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location);

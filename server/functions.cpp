@@ -112,7 +112,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 	fde->timeout_ms = 0;
 	fde->data = data;
 	fde->state = 0;
-	fde->original_clinet = NULL;
+	fde->original_client = NULL;
 	return (fde);
 }
 
@@ -167,7 +167,7 @@ void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollA
 		original_fde = reinterpret_cast<FdEvent *>(fde->data);
 		if (should_close_client)
 		{
-			fde->original_clinet->SetResponse("");
+			fde->original_client->SetResponse("");
 			epoll->GotoNextEvent(original_fde, kFdeWrite);
 		}
 		epoll->delete_event(fde);
@@ -175,6 +175,9 @@ void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollA
 	}
 	(void)data;
 }
+
+#define MAX_READ_SIZE 4096
+#define MAX_READ_TIME 1000
 
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
 {
@@ -186,6 +189,10 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		char buf[2];
 		ssize_t n;
 		std::string read_cont;
+		bool is_error = false;
+		long current_time = GetNowTime();
+		std::cout << "current_time: " << current_time << std::endl;
+
 
 		while (1)
 		{
@@ -196,6 +203,27 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 				break;
 			}
 			read_cont += buf;
+			if (read_cont.size() > MAX_READ_SIZE)
+			{
+				read_cont = "HTTP/1.1 500 Internal Server Error\r\n";
+				read_cont += "Content type: text/html\r\n\r\n";
+				read_cont += "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
+				read_cont += "\r\n";
+				std::cerr << "Too large response from CGI" << std::endl;
+				is_error = true;
+				break;
+			}
+			// if (GetNowTime() - current_time > MAX_READ_TIME)
+			// {
+			// 	read_cont = "HTTP/1.1 500 Internal Server Error\r\n";
+			// 	read_cont += "Content type: text/html\r\n\r\n";
+			// 	read_cont += "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
+			// 	read_cont += "\r\n";
+			// 	std::cerr << "Timeout on CGI response" << std::endl;
+			// 	is_error = true;
+			// 	break;
+			// }
+			std::cout << "CGI Response: " << read_cont << ":" << n << std::endl;
 		}
 		if (n < 0)
 		{
@@ -206,8 +234,16 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		// std::cout << "CGI Response: " << read_cont  << ":" << n << std::endl;
 		FdEvent *original_fde;
 		original_fde = reinterpret_cast<FdEvent *>(fde->data);
-		std::string response = ParseCGIResponse(read_cont); // responseの作成
-		fde->original_clinet->SetResponse(response);
+		if (is_error)
+		{
+			fde->original_client->SetResponse(read_cont);
+		}
+		else
+		{
+			fde->original_client->SetResponse(ParseCGIResponse(read_cont));
+		}
+		// std::string response = ParseCGIResponse(read_cont); // responseの作成
+		// fde->original_client->SetResponse(response);
 		epoll->GotoNextEvent(original_fde, kFdeWrite);
 		epoll->delete_event(fde);
 		close(fde->fd);
@@ -215,10 +251,17 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 	if (events & kFdeError)
 	{
 		std::cerr << "Error on CGI socket" << std::endl;
-		close(fde->fd);
 		epoll->delete_event(fde);
+		close(fde->fd);
 		delete fde;
 	}
+	// if (events & kFdeTimeout)
+	// {
+	// 	std::cerr << "Timeout on CGI socket" << std::endl;
+	// 	epoll->delete_event(fde);
+	// 	close(fde->fd);
+	// 	delete fde;
+	// }
 	(void)data;
 }
 
@@ -339,8 +382,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					cgi_input_fde->state |= kFdeTimeout;
 					std::cout << "output:" << output_pipe[1] << std::endl;
 					std::cout << "create cgi event" << std::endl;
-
-					cgi_input_fde->original_clinet = client_sock;
+					std::cout << "cgi_input_fde->fd:" << cgi_input_fde->fd << std::endl;
+					
+					cgi_input_fde->original_client = client_sock;
 					epoll->register_event(cgi_input_fde);
 					epoll->Add(cgi_input_fde, kFdeRead);
 					close(output_pipe[1]);
