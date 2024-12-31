@@ -51,11 +51,17 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
     }
     if (epev.events & EPOLLHUP)
     {
-      throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll hang up occurred");
+      // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll hang up occurred");
+      std::cerr << ">>>>>>>>>>>>Epoll hang up occurred<<<<<<<<<<<<<" << std::endl;
+      close(fde->fd);
+      // delete_event(fde);
     }
     if (epev.events & EPOLLRDHUP) 
     {
-      throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll read hang up occurred");
+      // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll read hang up occurred");
+      std::cerr << ">>>>>>>>>>>>Epoll read hang up occurred<<<<<<<<<<<<<" << std::endl;
+      close(fde->fd);
+      // delete_event(fde);
     }
     events |= kFdeRead | kFdeError;
   }
