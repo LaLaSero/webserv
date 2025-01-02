@@ -80,8 +80,12 @@ class HTTPResponse
 		void SetChildServer(const ChildServer *loc);
 		void HelpPostStatusChange(HTTPStatusCode i);
 		void set405Error(HTTPRequest& request);
-
+		void set500Error();
+		void setStatusCode(HTTPStatusCode statusCode);
+		void setBody(const std::string& body);
+		void setContentLength(size_t contentLength);
 		const std::string& getMessage() const; 
+		const std::string& getBody() const;
 	private:
 		const Config&	_config;
 		std::string		_version;

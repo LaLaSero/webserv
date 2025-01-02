@@ -108,6 +108,11 @@ bool HTTPResponse::isCGIRequest(HTTPRequest& request)
 	return false;
 }
 
+const std::string& HTTPResponse::getBody() const
+{
+	return _body;
+}
+
 bool HTTPResponse::isAutoIndex(HTTPRequest& request)
 {
 	// リクエストのURIを取得
@@ -147,6 +152,31 @@ void HTTPResponse::set405Error(HTTPRequest& request)
 	_keepAlive = request.getHeader("Connection") == "keep-alive";
 	std::cout << message << std::endl;
 }
+
+void HTTPResponse::set500Error()
+{
+	_statusCode = STATUS_500;
+	_body = "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>Internal Server Error</p></body></html>";
+	makeMessage();
+	_keepAlive = false;
+	std::cout << message << std::endl;
+}
+
+void HTTPResponse::setStatusCode(HTTPStatusCode statusCode)
+{
+	_statusCode = statusCode;
+}
+
+void HTTPResponse::setBody(const std::string& body)
+{
+	_body = body;
+}
+
+void HTTPResponse::setContentLength(size_t contentLength)
+{
+	_contentLength = contentLength;
+}
+
 // CGIに飛ばすか，リダイレクトか，ノーマルのレスポンスかを判別する
 void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {

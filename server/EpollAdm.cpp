@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   EpollAdm.cpp                                          :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ryanagit <ryanagit@student.42tokyo.jp>     +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/26 17:17:47 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/10/27 10:11:38 by ryanagit         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "EpollAdm.hpp"
 #include "ServerException.hpp"
@@ -54,13 +43,13 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev, EpollAdm *epoll_adm)
     {
       // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll hang up occurred");
       std::cerr << ">>>>>>>>>>>>Epoll hang up occurred<<<<<<<<<<<<<" << std::endl;
-      epoll_adm->delete_event(fde);
+      // epoll_adm->delete_event(fde);
     }
     else if (epev.events & EPOLLRDHUP) 
     {
       // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll read hang up occurred");
       std::cerr << ">>>>>>>>>>>>Epoll read hang up occurred<<<<<<<<<<<<<" << std::endl;
-      epoll_adm->delete_event(fde);
+      // epoll_adm->delete_event(fde);
     }
     events |= kFdeRead | kFdeError;
   }
@@ -69,6 +58,7 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev, EpollAdm *epoll_adm)
   fdee.events = events;
   fde->last_active = GetNowTime();
   // std::cout << "last_active at make fdeandevent: " << fde->last_active << std::endl;
+  (void)epoll_adm;
   return fdee;
 }
 
@@ -128,7 +118,7 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
 {
   std::vector<FdandEvent> fdee_vec;
 
-  // std::cout << registered_fd_events_.size() << std::endl;
+  std::cout << "number of events:" << registered_fd_events_.size() << std::endl;
   long current_time = GetNowTime();
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {

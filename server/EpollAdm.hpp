@@ -41,6 +41,7 @@ struct FdEvent {
 
   long timeout_ms;
   long last_active;
+  std::string read_cont;
 
 
   // 監視対象のFdeEvent
@@ -49,6 +50,7 @@ struct FdEvent {
   void *data;
 
  ClientSocket *original_client;
+ pid_t child_pid;
 };
 
 struct FdandEvent {

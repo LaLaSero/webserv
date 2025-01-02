@@ -1,5 +1,6 @@
 import os
 import cgi
+import time
 
 def document_response():
     print("Content-Type: text/html\r\n\r\n", end="")
@@ -34,6 +35,9 @@ def main():
         print("Content-Type: text/plain\r\n\r\n", end="")
         print("Unknown response type.")
     print(request_method)
+    while(1):
+        print("aaa")
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()

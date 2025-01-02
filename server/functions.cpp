@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   functions.cpp                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/19 12:07:54 by yanagitaryu       #+#    #+#             */
-/*   Updated: 2024/12/15 17:56:33 by yutakagi         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <iostream>
 #include "../config/Config.hpp"
 #include "../config/Parser.hpp"
@@ -24,6 +12,7 @@
 #include "../cgi/CgiHandler.hpp"
 #include "functions.hpp"
 #include "../request/MethodUtils.hpp"
+#include <fcntl.h>
 
 static void prepare_hints(struct addrinfo &hints, int type)
 {
@@ -109,7 +98,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 	FdEvent *fde = new FdEvent();
 	fde->fd = fd;
 	fde->func = func;
-	fde->timeout_ms = 10000;
+	fde->timeout_ms = 3000;
 	fde->data = data;
 	fde->state = 0;
 	fde->original_client = NULL;
@@ -153,12 +142,60 @@ bool isfinish()
 
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
 {
+	std::cout << "HandleCgiSocketEvent" << std::endl;
+	std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+		if (events & kFdeError)
+	{
+		std::cerr << "Error on CGI socket" << std::endl;
+		std::cout << "delete event at handle cgi socket kfde error" << std::endl;
+		epoll->delete_event(fde);
+		close(fde->fd);
+		return;
+	}
+	if (events & kFdeTimeout)
+	{
+		std::cerr << "Timeout on CGI socket" << std::endl;
+		std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+		if (fde->child_pid > 0)
+		{
+			std::cout << "kill(fde->child_pid, SIGKILL);" << std::endl;
+			std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+			kill(fde->child_pid, SIGKILL);
+		}
+		// std::string timeout_resp =
+		// 	"HTTP/1.1 500 Internal Server Error\r\n"
+		// 	"Content-Type: text/html\r\n\r\n"
+		// 	"<html>"
+		// 	"<head><title>Timeout</title></head>"
+		// 	"<body><h1>CGI Timeout</h1></body>"
+		// 	"</html>\r\n";
+
+		// // original_fde がクライアント側 FdEvent へのポインタ
+		// FdEvent* original_fde = reinterpret_cast<FdEvent*>(fde->data);
+		// if (fde->original_client) {
+		// 	fde->original_client->SetResponse(timeout_resp);
+		// }
+
+		// // 3) クライアントソケットに書き込みイベントをセット (500を返す)
+		// std::cout << "goto next event at handle cgi socket kfde timeout" << std::endl;
+		// epoll->GotoNextEvent(original_fde, kFdeWrite);
+
+		// 4) この CGI 用 FdEvent を epoll から削除して close
+		int fd = fde->fd;
+		std::cout << "delete event at handle cgi socket kfde timeout" << std::endl;
+		epoll->delete_event(fde);
+		close(fd);
+
+		return;
+	}
+
+	
 	if (events & kFdeRead)
 	{
 		// CGIの出力を読み取る
 		std::cout << "start cgi reading" << std::endl;
 		// `output_pipe` からデータを読み取り、クライアントに送信するなどの処理
-		char buf[2];
+		char buf[BUF_SIZE];
 		ssize_t n;
 		std::string read_cont;
 		bool is_error = false;
@@ -169,71 +206,58 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		while (1)
 		{
 			n = read(fde->fd, buf, sizeof(buf) - 1);
-			buf[n] = '\0'; // Null-terminate the string
-			if (n <= 0)
+			if (n > 0)
+			{
+				buf[n] = '\0';
+				fde->read_cont += buf;
+				if (fde->read_cont.size() > MAX_READ_SIZE)
+				{
+					fde->read_cont = "HTTP/1.1 500 Internal Server Error\r\n";
+					fde->read_cont += "Content type: text/html\r\n\r\n";
+					fde->read_cont += "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
+					fde->read_cont += "\r\n";
+					std::cerr << "Too large response from CGI" << std::endl;
+					is_error = true;
+					break;
+				}
+			}
+			else if (n == 0)
 			{
 				break;
 			}
-			read_cont += buf;
-			if (read_cont.size() > MAX_READ_SIZE)
+			else if (n == -1)
 			{
-				read_cont = "HTTP/1.1 500 Internal Server Error\r\n";
-				read_cont += "Content type: text/html\r\n\r\n";
-				read_cont += "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
-				read_cont += "\r\n";
-				std::cerr << "Too large response from CGI" << std::endl;
-				is_error = true;
-				break;
+				return ;
 			}
-			// if (GetNowTime() - current_time > MAX_READ_TIME)
-			// {
-			// 	read_cont = "HTTP/1.1 500 Internal Server Error\r\n";
-			// 	read_cont += "Content type: text/html\r\n\r\n";
-			// 	read_cont += "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1></body></html>";
-			// 	read_cont += "\r\n";
-			// 	std::cerr << "Timeout on CGI response" << std::endl;
-			// 	is_error = true;
-			// 	break;
-			// }
-			std::cout << "CGI Response: " << read_cont << ":" << n << std::endl;
+			else
+			{
+				perror("cgi read");
+				std::cerr << "cgi read error" << std::endl;
+				return ;
+			}
+
+			std::cout << "CGI Response: " << fde->read_cont << ":" << n << std::endl;
 		}
-		if (n < 0)
-		{
-			perror("cgi read");
-			std::exit(1);
-		}
-		// 読み取ったデータを処理する（レスポンスをクライアントに送信など）
-		// std::cout << "CGI Response: " << read_cont  << ":" << n << std::endl;
+
 		FdEvent *original_fde;
 		original_fde = reinterpret_cast<FdEvent *>(fde->data);
 		if (is_error)
 		{
-			fde->original_client->SetResponse(read_cont);
+			fde->original_client->SetResponse(fde->read_cont);
 		}
 		else
 		{
-			fde->original_client->SetResponse(ParseCGIResponse(read_cont));
+			fde->original_client->SetResponse(ParseCGIResponse(fde->read_cont));
 		}
 		// std::string response = ParseCGIResponse(read_cont); // responseの作成
 		// fde->original_client->SetResponse(response);
+		std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
 		epoll->GotoNextEvent(original_fde, kFdeWrite);
+		std::cout << "delete event at handle cgi socket" << std::endl;
 		epoll->delete_event(fde);
 		close(fde->fd);
 	}
-	if (events & kFdeError)
-	{
-		std::cerr << "Error on CGI socket" << std::endl;
-		epoll->delete_event(fde);
-		close(fde->fd);
-		delete fde;
-	}
-	if (events & kFdeTimeout)
-	{
-		std::cerr << "Timeout on CGI socket" << std::endl;
-		epoll->delete_event(fde);
-		close(fde->fd);
-		delete fde;
-	}
+
 	(void)data;
 }
 
@@ -255,18 +279,41 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 {
 	ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 	bool should_close_client = false;
+	
+	std::cout <<"client_sock->get_cgi_state():"<< client_sock->get_cgi_state() << std::endl;
 
+	if (events & kFdeError)
+	{
+		std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
+		HTTPResponse response(epoll->get_config());
+		response.set500Error();
+		client_sock->SetResponse(response.makeBodyResponse());
+		std::cout <<"epoll goto next event at handle client socket"<< std::endl;
+		epoll->GotoNextEvent(fde, kFdeWrite);
+		int fd = fde->fd;
+		std::cout << "delete event at handle client socket kfde timeout" << std::endl;
+		epoll->delete_event(fde);
+		close(fd);
+		delete client_sock;
+		return;
+	}
 	if (events & kFdeTimeout)
 	{
-		std::cout << "vvvvvvvvvvvvvvvvTimeout on client socketvvvvvvvvvvvvvv" << std::endl;
+		// std::cout << "vvvvvvvvvvvvvvvvTimeout on client socketvvvvvvvvvvvvvv" << std::endl;
+		HTTPResponse response(epoll->get_config());
+		response.set500Error();
+		client_sock->SetResponse(response.makeBodyResponse());
+		std::cout <<"epoll goto next event at handle client socket"<< std::endl;
+		epoll->GotoNextEvent(fde, kFdeWrite);
 		int fd = fde->fd;
+		std::cout << "delete event at handle client socket kfde timeout" << std::endl;
 		epoll->delete_event(fde);
 		close(fd);
 		delete client_sock;
 		return;
 	}
 	// 読み込みイベントの処理
-	if (events & kFdeRead)
+	if (events & kFdeRead && client_sock->get_cgi_state() == 0)
 	{
 		char buf[BUF_SIZE];
 		int conn_fd = client_sock->GetFd();
@@ -308,7 +355,6 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 			ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
 			response.SetChildServer(&server);
 			std::vector<Location>::const_iterator loc_it = find_location(&server, request.getPath());
-			// loc_itがendの場合は適切なエラーレスポンスを生成
 			if (loc_it == server.getLocations().end())
 			{
 				;
@@ -333,6 +379,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					std::cout << "405" << std::endl;
 					response.set405Error(request);
 					client_sock->SetResponse(response.makeBodyResponse()); // クライアントソケットにレスポンスを保存
+					std::cout << "goto next event at handle client socket kfde write" << std::endl;
 					epoll->GotoNextEvent(fde, kFdeWrite);				   // 書き込み準備ができたら書き込みイベントを監視
 					return;
 				}
@@ -345,6 +392,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 			if (request.getMode() == CGI_RESPONSE)
 			{
 				// CGIプロセス用の入力と出力のpipeを作成
+				client_sock->set_cgi_state(1);
 				std::cout << "start cgi" << std::endl;
 				int output_pipe[2];
 				if (pipe(output_pipe) == -1)
@@ -352,9 +400,25 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					perror("pipe failed");
 					return;
 				}
+				int flags = fcntl(output_pipe[0], F_GETFL, 0);
+				if (flags == -1)
+				{
+					perror("fcntl F_GETFL failed");
+					close(output_pipe[0]);
+					close(output_pipe[1]);
+					return;
+				}
+				if (fcntl(output_pipe[0], F_SETFL, flags | O_NONBLOCK) == -1)
+				{
+					perror("fcntl F_SETFL failed");
+					close(output_pipe[0]);
+					close(output_pipe[1]);
+					return;
+				}
 
 				// CGIプロセスを実行
 				pid_t pid = fork();
+				std::cout << "pid:" << pid << std::endl;
 				if (pid == -1)
 				{
 					perror("fork failed");
@@ -366,14 +430,13 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 				{
 					// 親プロセス側でpipeの読み書きイベントをepollに登録
 					FdEvent *cgi_input_fde = CreateFdEvent(output_pipe[0], HandleCgiSocketEvent, fde); // 入力pipeの読み込み
-
-
 					cgi_input_fde->state |= kFdeTimeout;
+					cgi_input_fde->timeout_ms = 2000;
 					std::cout << "output:" << output_pipe[1] << std::endl;
 					std::cout << "create cgi event" << std::endl;
 					std::cout << "cgi_input_fde->fd:" << cgi_input_fde->fd << std::endl;
-					
 					cgi_input_fde->original_client = client_sock;
+					cgi_input_fde->child_pid = pid;
 					epoll->register_event(cgi_input_fde);
 					epoll->Add(cgi_input_fde, kFdeRead);
 					close(output_pipe[1]);
@@ -385,6 +448,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 				// 通常のレスポンス処理
 				std::string res = response.makeBodyResponse();
 				client_sock->SetResponse(res);		  // クライアントソケットにレスポンスを保存
+				std::cout << "goto next event at handle client socket last of kfderead" << std::endl;
 				epoll->GotoNextEvent(fde, kFdeWrite); // 書き込み準備ができたら書き込みイベントを監視
 			}
 		}
@@ -401,25 +465,18 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		{
 			perror("write failed");
 			close(fde->fd);
+			std::cout << "delete event at handle client socket kfde write" << std::endl;
 			epoll->delete_event(fde);
 			delete fde;
 			delete client_sock;
 			return;
 		}
 		// 書き込み完了後に接続をクローズ
+		std::cout << "delete event at handle client socket kfde write" << std::endl;
 		epoll->delete_event(fde);
 		delete client_sock;
 	}
 
-
-	if (events & kFdeError)
-	{
-		std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
-		close(fde->fd);
-		epoll->delete_event(fde);
-		delete client_sock;
-		return;
-	}
 }
 
 void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)

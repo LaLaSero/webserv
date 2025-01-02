@@ -19,6 +19,8 @@ class ClientSocket : public Socket {
     std::string &GetRecvBuffer() {
         return recv_buffer_;
     }
+    int get_cgi_state()const;
+    void set_cgi_state(int state);
  private:
      std::string recv_buffer_;
      const SocketAddress client_addr_;
@@ -26,6 +28,7 @@ class ClientSocket : public Socket {
      bool is_shutdown_;
      int server_fd_;
      ClientSocket();
+     int cgi_state;
      ClientSocket &operator=(const ClientSocket &rhs);
 
 };
