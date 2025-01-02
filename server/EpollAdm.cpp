@@ -36,7 +36,8 @@ epoll_event MakeEpollEvent(FdEvent *fde)
 }
 
 
-FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev) 
+
+FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev, EpollAdm *epoll_adm) 
 {
   unsigned int events = 0;
   if ((epev.events & EPOLLIN) && (fde->state & kFdeRead)) 
@@ -53,15 +54,13 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
     {
       // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll hang up occurred");
       std::cerr << ">>>>>>>>>>>>Epoll hang up occurred<<<<<<<<<<<<<" << std::endl;
-      close(fde->fd);
-      // delete_event(fde);
+      epoll_adm->delete_event(fde);
     }
-    if (epev.events & EPOLLRDHUP) 
+    else if (epev.events & EPOLLRDHUP) 
     {
       // throw ServerException(HTTP_REQUEST_TIMEOUT, "Epoll read hang up occurred");
       std::cerr << ">>>>>>>>>>>>Epoll read hang up occurred<<<<<<<<<<<<<" << std::endl;
-      close(fde->fd);
-      // delete_event(fde);
+      epoll_adm->delete_event(fde);
     }
     events |= kFdeRead | kFdeError;
   }
@@ -69,6 +68,7 @@ FdandEvent MakeFdandEvent(FdEvent *fde, epoll_event epev)
   fdee.fde = fde;
   fdee.events = events;
   fde->last_active = GetNowTime();
+  // std::cout << "last_active at make fdeandevent: " << fde->last_active << std::endl;
   return fdee;
 }
 
@@ -133,8 +133,12 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {
     FdEvent *fde = it->second;
-    if (fde->state / kFdeTimeout && current_time - fde->last_active > fde->timeout_ms) 
+    if ((fde->state & kFdeTimeout) && (current_time - fde->last_active > fde->timeout_ms)) 
     {
+      std::cout <<"checked at retrieve timeouts" << std::endl;
+      std::cout << "current_time: " << current_time << std::endl;
+      std::cout << "last_active: " << fde->last_active << std::endl;
+      std::cout << "current_time - last_active: " << current_time - fde->last_active << std::endl;
 		std::cerr << "\x1b[38;2;10;20;30mDebug" << std::endl;
 		std::cerr << "Timeout occurred fd:" << fde->fd <<std::endl;
 		std::cerr << "current_time:" << current_time << std::endl;
@@ -169,7 +173,7 @@ std::vector<FdandEvent> EpollAdm::CheckEvents(int timeout_ms)
         }
         FdEvent *fde = registered_fd_events_[epoll_events[i].data.fd];
         // FdandEventの作成と追加
-        FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i]); // 実際のイベントを設定
+        FdandEvent fdee = MakeFdandEvent(fde,epoll_events[i], this); // 実際のイベントを設定
         fdee_vec.push_back(fdee);
         fde->last_active = GetNowTime();
 		// std::cerr << "-----Debug-------" << std::endl;

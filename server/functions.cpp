@@ -109,10 +109,11 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 	FdEvent *fde = new FdEvent();
 	fde->fd = fd;
 	fde->func = func;
-	fde->timeout_ms = 1000;
+	fde->timeout_ms = 10000;
 	fde->data = data;
 	fde->state = 0;
 	fde->original_client = NULL;
+	fde->last_active = GetNowTime();
 	return (fde);
 }
 
@@ -145,35 +146,6 @@ bool Overread(ClientSocket *socket)
 bool isfinish()
 {
 	return (true);
-}
-
-void HandlePOSTSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
-{
-	bool should_close_client = true;
-	std::cout << "POST writing starting" << std::endl;
-	if (events & kFdeWrite)
-	{
-		std::string *data_to_send = reinterpret_cast<std::string *>(fde->data);
-		ssize_t nwritten = write(fde->fd, data_to_send->c_str(), data_to_send->size());
-		if (nwritten == -1)
-		{
-			perror("write failed");
-			close(fde->fd);
-			epoll->delete_event(fde);
-			delete fde;
-			return;
-		}
-		FdEvent *original_fde;
-		original_fde = reinterpret_cast<FdEvent *>(fde->data);
-		if (should_close_client)
-		{
-			fde->original_client->SetResponse("");
-			epoll->GotoNextEvent(original_fde, kFdeWrite);
-		}
-		epoll->delete_event(fde);
-		close(fde->fd);
-	}
-	(void)data;
 }
 
 #define MAX_READ_SIZE 4096
@@ -255,13 +227,13 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		close(fde->fd);
 		delete fde;
 	}
-	// if (events & kFdeTimeout)
-	// {
-	// 	std::cerr << "Timeout on CGI socket" << std::endl;
-	// 	epoll->delete_event(fde);
-	// 	close(fde->fd);
-	// 	delete fde;
-	// }
+	if (events & kFdeTimeout)
+	{
+		std::cerr << "Timeout on CGI socket" << std::endl;
+		epoll->delete_event(fde);
+		close(fde->fd);
+		delete fde;
+	}
 	(void)data;
 }
 
@@ -284,10 +256,18 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 	bool should_close_client = false;
 
+	if (events & kFdeTimeout)
+	{
+		std::cout << "vvvvvvvvvvvvvvvvTimeout on client socketvvvvvvvvvvvvvv" << std::endl;
+		int fd = fde->fd;
+		epoll->delete_event(fde);
+		close(fd);
+		delete client_sock;
+		return;
+	}
 	// 読み込みイベントの処理
 	if (events & kFdeRead)
 	{
-		std::cout << "---start reading buf---" << std::endl;
 		char buf[BUF_SIZE];
 		int conn_fd = client_sock->GetFd();
 		ssize_t n = read(conn_fd, buf, sizeof(buf) - 1);
@@ -296,14 +276,16 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 			buf[n] = '\0'; // Null-terminate the string
 			client_sock->AppendRecvBuffer(buf, n);
 			std::string recvBuffer = client_sock->GetRecvBuffer();
-			std::cout << recvBuffer << std::endl;
 		}
-		std::cout << "---end reading buf---" << std::endl;
-		if (n <= 0)
+		if (n == 0)
 		{
 			// EOF (TCP flag FIN) or Error
 			client_sock->SetIsShutdown(true);
 			should_close_client = true;
+		}
+		else if (n == -1)
+		{
+			return ;
 		}
 		HTTPRequest request;
 		ParseRequest parser_request(request);
@@ -311,33 +293,21 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		parser_request.parse(buffer);
 		if (parser_request.isFinished())
 		{
-			// std::cout << ">>>>>>>>>>>>finished<<<<<<<<<<<<<" << std::endl;
 			should_close_client = true;
 		}
-
-		// should_close_client = true;
-		// std::cout << "################should_close_client: " << should_close_client << "################" << std::endl;
 		if (should_close_client)
 		{
 			// HTTPリクエストの解析
 			HTTPRequest request;
 			ParseRequest parser_request(request);
 			const char *buffer = client_sock->GetRecvBuffer().c_str();
-			// std::cout << "------------------buffer: " << buffer << std::endl;
-			// std::cout <<"----------buffer--------"<<std::endl;
+
 			parser_request.parse(buffer);
-			// if (parser_request.isFinished())
-			// 	std::cout << ">>>>>>>>>>>>parse finished<<<<<<<<<<<<<" << std::endl;
-			// else
-			// 	std::cout << ">>>>>>>>>>>>parse not finished<<<<<<<<<<<<<" << std::endl;
-			// HTTPレスポンスの準備
 			HTTPResponse response(epoll->get_config());
 			const std::string &hostname = request.getHost();
 			ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
 			response.SetChildServer(&server);
-
 			std::vector<Location>::const_iterator loc_it = find_location(&server, request.getPath());
-
 			// loc_itがendの場合は適切なエラーレスポンスを生成
 			if (loc_it == server.getLocations().end())
 			{
@@ -441,22 +411,14 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		delete client_sock;
 	}
 
-	if (events & kFdeTimeout)
-	{
-		std::cerr << "Timeout on client socket" << std::endl;
-		// epoll->delete_event(fde);
-		// close(fde->fd);
-		// delete fde;
-		// delete client_sock;
-	}
 
 	if (events & kFdeError)
 	{
 		std::cerr << "Error on client socket, fd: " << fde->fd << std::endl;
 		close(fde->fd);
 		epoll->delete_event(fde);
-		delete fde;
 		delete client_sock;
+		return;
 	}
 }
 
@@ -468,6 +430,7 @@ void HandleListenSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	{
 		ClientSocket *result = listen_sock->AcceptNewConnection();
 		FdEvent *client_fde = CreateFdEvent(result->GetFd(), HandleClientSocketEvent, result);
+		client_fde->state |= kFdeTimeout;
 		epoll->register_event(client_fde);
 		epoll->Add(client_fde, kFdeRead);
 	}
@@ -532,6 +495,7 @@ void Loop(EpollAdm &epoll)
 		{
 			FdEvent *fde = it->fde;
 			unsigned int events = it->events;
+			events |= kFdeTimeout;
 			AwakeFdEvent(fde, events, &epoll);
 		}
 		std::vector<FdandEvent> result = epoll.CheckEvents(100);
