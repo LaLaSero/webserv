@@ -50,10 +50,12 @@
     <p>ボディサイズを超えるリクエスト</p>
     <p class="command">curl -X POST -H "Content-Type: plain/text" --data "BODY IS HERE write something short or long than body limit" localhost:8081/docs/upload/</p>
     <p>AutoIndexの確認</p>
-    <p class="command">curl -i localhost:8081/docs/index/</p>
+    <p class="command">curl -i localhost:8081/docs/</p>
     <p>CGIの確認</p>
     <p class="command">curl -i "localhost:8081/docs/cgi-bin/test.py?type=document-response"</p>
-    <p>存在しないhostnameの時</p>
-    <p class="command">curl --resolve unkonwe:2020:0.0.0.0 http://unkonwe:2020/hello/</p>
+    <p>siegeコマンドによる負荷テスト</p>
+    <p class="command">siege -b http://localhost:8081/docs/</p>
+    <!-- <p>存在しないhostnameの時</p> -->
+    <!-- <p class="command">curl --resolve unkonwe:2020:0.0.0.0 http://unkonwe:2020/hello/</p> -->
 </body>
 </html>
