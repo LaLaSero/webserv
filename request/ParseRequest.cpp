@@ -59,28 +59,33 @@ bool ParseRequest::readRequestLine(std::stringstream &ss)
 		return false;
 	}
 	if (line.empty()) {
-		this->_request.set_errorno_(errorno_badreq);
+		// this->_request.set_errorno_(errorno_badreq);
+		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
 		return false;
 	}
 	std::vector<std::string> request_line = split(line, ' ');
 	if (countSpace(line) != 2)
 	{
-		this->_request.set_errorno_(errorno_badreq);
+		// this->_request.set_errorno_(errorno_badreq);
+		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
 		return false;
 	}
 	if (request_line.size() != 3)
 	{
-		this->_request.set_errorno_(errorno_badreq);
+		// this->_request.set_errorno_(errorno_badreq);
+		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
 		return false;
 	}
 	if (request_line[2] != "HTTP/1.1")
 	{
-		this->_request.set_errorno_(errorno_notsup);
+		// this->_request.set_errorno_(errorno_notsup);
+		throw ServerException(HTTP_HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported");
 		return false;
 	}
 	if (request_line[1][0] != '/' || request_line[1].find("/../") != std::string::npos)
 	{
-		this->_request.set_errorno_(errorno_badreq);
+		// this->_request.set_errorno_(errorno_badreq);
+		throw ServerException(HTTP_BAD_REQUEST, "Bad Request");
 		return false;
 	}
 	_request.setMethod(request_line[0]);

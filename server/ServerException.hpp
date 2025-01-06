@@ -41,7 +41,7 @@ class ServerException : public std::exception
 				case 405: return "Method Not Allowed";
 				case 413: return "Payload Too Large";
 				case 500: return "Internal Server Error";
-				// 他のステータスコードも適宜追加
+				case 505: return "HTTP Version Not Supported";
 				default:  return "Unknown";
 			}
 		}
