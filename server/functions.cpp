@@ -303,7 +303,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	ClientSocket *client_sock = reinterpret_cast<ClientSocket *>(data);
 	bool should_close_client = false;
 	
-	std::cout <<"client_sock->get_cgi_state():"<< client_sock->get_cgi_state() << std::endl;
+	// std::cout <<"client_sock->get_cgi_state():"<< client_sock->get_cgi_state() << std::endl;
 
 	if (events & kFdeError)
 	{
@@ -325,13 +325,35 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		// std::cout << "vvvvvvvvvvvvvvvvTimeout on client socketvvvvvvvvvvvvvv" << std::endl;
 		HTTPResponse response(epoll->get_config());
 		response.set500Error();
-		client_sock->SetResponse(response.makeBodyResponse());
-		std::cout <<"epoll goto next event at handle client socket"<< std::endl;
+		std::string response_str = response.makeBodyResponse();
+		std::cout << "--------start timeout response--------" << std::endl;
+		std::cout << response_str << std::endl;
+		std::cout << "--------end timeout response--------" << std::endl;
+		client_sock->SetResponse(response_str);
+		ssize_t nwritten = write(fde->fd, response_str.c_str(), response_str.size());
+		if (nwritten == -1)
+		{
+			perror("write failed");
+			int fd = fde->fd;
+			epoll->delete_event(fde);
+			if (close(fd) == -1)
+			{
+				perror("close");
+				return;
+			}
+			delete client_sock;
+			return;
+		}
+		// std::cout <<"epoll goto next event at handle client socket"<< std::endl;
 		epoll->GotoNextEvent(fde, kFdeWrite);
 		int fd = fde->fd;
-		std::cout << "delete event at handle client socket kfde timeout" << std::endl;
+		// std::cout << "delete event at handle client socket kfde timeout" << std::endl;
 		epoll->delete_event(fde);
-		close(fd);
+		if (close(fd) == -1)
+		{
+			perror("close");
+			return;
+		}
 		delete client_sock;
 		return;
 	}

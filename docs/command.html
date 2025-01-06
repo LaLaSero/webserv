@@ -37,7 +37,7 @@
 <body>
     <h1>サンプルコマンドリスト</h1>
     <p>以下のサンプルコマンドでテスト項目を試してみてください</p>
-    <p>ループバックアドレスの設定</p>
+    <p>必要であればループバックアドレスの設定</p>
     <p class="command">sudo ip addr add 127.0.0.2/8 dev lo</p>
     <p>GETメソッドの確認</p>
     <p class="command">curl -i localhost:8081/docs</p>
@@ -53,9 +53,6 @@
     <p class="command">curl -i localhost:8081/docs/index/</p>
     <p>CGIの確認</p>
     <p class="command">curl -i "localhost:8081/docs/cgi-bin/test.py?type=document-response"</p>
-    <p>同じポートで異なるホスト名のサーバー</p>
-    <p class="command">curl --resolve defaultserver:2020:127.0.0.1 http://defaultserver:2020/hello/</p>
-    <p class="command">curl --resolve virtualserver:2020:127.0.0.2 http://virtualserver:2020/hello/ </p>
     <p>存在しないhostnameの時</p>
     <p class="command">curl --resolve unkonwe:2020:0.0.0.0 http://unkonwe:2020/hello/</p>
 </body>
