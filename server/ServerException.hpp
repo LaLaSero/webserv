@@ -6,6 +6,7 @@
 // #include <unordered_map>
 #include <sstream>
 #include <map>
+#include <iostream>
 
 #define HTTP_OK 200
 #define HTTP_BAD_REQUEST 400
@@ -22,9 +23,7 @@ class ServerException : public std::exception
 	public:
 		ServerException(int statusCode, const std::string& message): _statusCode(statusCode), _message(message)
 		{
-			std::ostringstream oss;
-			 oss << _statusCode;
-			_fullMessage = "HTTP Error " + oss.str() + ": " + _message;
+			_fullMessage = createErrorResponse(statusCode, message);
 		}
 
 		virtual ~ServerException() throw() {}
@@ -32,6 +31,44 @@ class ServerException : public std::exception
 		int getStatusCode() const
 		{
 			return _statusCode;
+		}
+
+		static std::string getReasonPhrase(int statusCode)
+		{
+			switch (statusCode) {
+				case 400: return "Bad Request";
+				case 404: return "Not Found";
+				case 405: return "Method Not Allowed";
+				case 413: return "Payload Too Large";
+				case 500: return "Internal Server Error";
+				// 他のステータスコードも適宜追加
+				default:  return "Unknown";
+			}
+		}
+
+
+		std::string createErrorResponse(int statusCode, const std::string& message)
+		{
+			// HTMLのボディを作成（簡易例）
+			// 実際には独自のカスタムエラーページなどを返すことが多い
+			std::ostringstream bodyStream;
+			bodyStream << "<html>\n"
+					<< "<head><title>" << statusCode << " " << getReasonPhrase(statusCode) << "</title></head>\n"
+					<< "<body>\n"
+					<< "<h1>" << statusCode << " " << getReasonPhrase(statusCode) << "</h1>\n"
+					<< "<p>" << message << "</p>\n"
+					<< "</body></html>\n";
+			std::string body = bodyStream.str();
+			
+			// レスポンス全体を組み立て
+			std::ostringstream responseStream;
+			responseStream << "HTTP/1.1 " << statusCode << " " << getReasonPhrase(statusCode) << "\r\n"
+						<< "Content-Type: text/html\r\n"
+						<< "Content-Length: " << body.size() << "\r\n"
+						<< "Connection: close\r\n"
+						<< "\r\n"
+						<< body;
+			return responseStream.str();
 		}
 
 		const std::string& getMessage() const

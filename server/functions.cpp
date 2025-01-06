@@ -98,7 +98,7 @@ FdEvent *CreateFdEvent(int fd, FdFunc func, void *data)
 	FdEvent *fde = new FdEvent();
 	fde->fd = fd;
 	fde->func = func;
-	fde->timeout_ms = 3000;
+	fde->timeout_ms = 15000;
 	fde->data = data;
 	fde->state = 0;
 	fde->original_client = NULL;
@@ -382,7 +382,20 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		HTTPRequest request;
 		ParseRequest parser_request(request);
 		const char *buffer = client_sock->GetRecvBuffer().c_str();
-		parser_request.parse(buffer);
+		try
+		{
+			parser_request.parse(buffer);
+		}
+		catch(const std::exception& e)
+		{
+			// std::cout << "--------start error response e.what()--------" << std::endl;
+			// std::cout << e.what() << '\n';
+			// std::cout << "--------end error response--------" << std::endl;
+			std::string response_str = e.what();
+			client_sock->SetResponse(response_str);
+			epoll->GotoNextEvent(fde, kFdeWrite);				   // 書き込み準備ができたら書き込みイベントを監視
+			return;
+		}
 		if (parser_request.isFinished())
 		{
 			should_close_client = true;
@@ -393,8 +406,21 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 			HTTPRequest request;
 			ParseRequest parser_request(request);
 			const char *buffer = client_sock->GetRecvBuffer().c_str();
-
-			parser_request.parse(buffer);
+			try
+			{
+				// std::cout << "--------start parse--------" << std::endl;
+				parser_request.parse(buffer);
+			}
+			catch(const ServerException& e)
+			{
+				std::string response_str = e.what();
+				// std::cout << "--------start error response--------" << std::endl;
+				// std::cout << response_str << std::endl;
+				// std::cout << "--------end error response--------" << std::endl;
+				client_sock->SetResponse(response_str);
+				epoll->GotoNextEvent(fde, kFdeWrite);				   // 書き込み準備ができたら書き込みイベントを監視
+				return;
+			}
 			HTTPResponse response(epoll->get_config());
 			const std::string &hostname = request.getHost();
 			ChildServer server = epoll->get_config().FindServerfromFd(client_sock->get_server_fd(), hostname);
