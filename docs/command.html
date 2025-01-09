@@ -43,8 +43,10 @@
     <p class="command">curl -i localhost:8081/docs</p>
     <p>POSTメソッドによるファイルのアップロードの確認</p>
     <p class="command">curl -i -X POST -F upfile=@./test.py localhost:8081/docs/upload/</p>
+    <p>アップロードしたファイルの確認</p>
+    <p class="command">curl -i localhost:8081/docs/upload/posted.txt</p>
     <p>DELETEメソッドの確認</p>
-    <p class="command">curl  -v localhost:8081/docs/delete/a.txt -X DELETE</p>
+    <p class="command">curl -v localhost:8081/docs/upload/posted.txt -X DELETE</p>
     <p>不適切なメソッドの確認</p>
     <p class="command">curl -X FOO localhost:8081/docs</p>
     <p>ボディサイズを超えるリクエスト</p>

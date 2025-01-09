@@ -118,17 +118,17 @@ std::vector<FdandEvent> EpollAdm::RetrieveTimeouts()
 {
   std::vector<FdandEvent> fdee_vec;
 
-  std::cout << "number of events:" << registered_fd_events_.size() << std::endl;
+  // std::cout << "number of events:" << registered_fd_events_.size() << std::endl;
   long current_time = GetNowTime();
   for (std::map<int, FdEvent *>::const_iterator it = registered_fd_events_.begin(); it != registered_fd_events_.end(); ++it) 
   {
     FdEvent *fde = it->second;
     if ((fde->state & kFdeTimeout) && (current_time - fde->last_active > fde->timeout_ms)) 
     {
-      std::cout <<"checked at retrieve timeouts" << std::endl;
-      std::cout << "current_time: " << current_time << std::endl;
-      std::cout << "last_active: " << fde->last_active << std::endl;
-      std::cout << "current_time - last_active: " << current_time - fde->last_active << std::endl;
+      // std::cout <<"checked at retrieve timeouts" << std::endl;
+      // std::cout << "current_time: " << current_time << std::endl;
+      // std::cout << "last_active: " << fde->last_active << std::endl;
+      // std::cout << "current_time - last_active: " << current_time - fde->last_active << std::endl;
 		std::cerr << "\x1b[38;2;10;20;30mDebug" << std::endl;
 		std::cerr << "Timeout occurred fd:" << fde->fd <<std::endl;
 		std::cerr << "current_time:" << current_time << std::endl;

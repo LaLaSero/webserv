@@ -142,16 +142,16 @@ bool isfinish()
 
 void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAdm *epoll)
 {
-	std::cout << "HandleCgiSocketEvent" << std::endl;
-	std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+	// std::cout << "HandleCgiSocketEvent" << std::endl;
+	// std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
 	if (events & kFdeError)
 	{
-		std::cerr << "Error on CGI socket" << std::endl;
-		std::cout << "delete event at handle cgi socket kfde error" << std::endl;
+		// std::cerr << "Error on CGI socket" << std::endl;
+		// std::cout << "delete event at handle cgi socket kfde error" << std::endl;
 		if (fde->child_pid > 0 && kill(fde->child_pid, 0) == 0)
 		{
-			std::cout << "kill(fde->child_pid, SIGKILL);" << std::endl;
-			std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+			// std::cout << "kill(fde->child_pid, SIGKILL);" << std::endl;
+			// std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
 			kill(fde->child_pid, SIGKILL);
 		}
 		int fd = fde->fd;
@@ -166,11 +166,11 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 	if (events & kFdeTimeout)
 	{
 		std::cerr << "Timeout on CGI socket" << std::endl;
-		std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+		// std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
 		if (fde->child_pid > 0 && kill(fde->child_pid, 0) == 0)
 		{
-			std::cout << "kill(fde->child_pid, SIGKILL);" << std::endl;
-			std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
+			// std::cout << "kill(fde->child_pid, SIGKILL);" << std::endl;
+			// std::cout << "fde->child_pid:" << fde->child_pid << std::endl;
 			kill(fde->child_pid, SIGKILL);
 		}
 		// std::string timeout_resp =
@@ -193,7 +193,7 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 
 		// 4) この CGI 用 FdEvent を epoll から削除して close
 		int fd = fde->fd;
-		std::cout << "delete event at handle cgi socket kfde timeout" << std::endl;
+		// std::cout << "delete event at handle cgi socket kfde timeout" << std::endl;
 		epoll->delete_event(fde);
 		if (close(fd) == -1)
 		{
@@ -266,12 +266,12 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		{
 			fde->original_client->SetResponse(ParseCGIResponse(fde->read_cont));
 		}
-		std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
+		// std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
 		std::string response = ParseCGIResponse(fde->read_cont); // responseの作成
 		fde->original_client->SetResponse(response);
-		std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
+		// std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
 		epoll->GotoNextEvent(original_fde, kFdeWrite);
-		std::cout << "delete event at handle cgi socket" << std::endl;
+		// std::cout << "delete event at handle cgi socket" << std::endl;
 		int fd = fde->fd;
 		epoll->delete_event(fde);
 		if (close(fd) == -1)
@@ -311,10 +311,10 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		HTTPResponse response(epoll->get_config());
 		response.set500Error();
 		client_sock->SetResponse(response.makeBodyResponse());
-		std::cout <<"epoll goto next event at handle client socket"<< std::endl;
+		// std::cout <<"epoll goto next event at handle client socket"<< std::endl;
 		epoll->GotoNextEvent(fde, kFdeWrite);
 		int fd = fde->fd;
-		std::cout << "delete event at handle client socket kfde timeout" << std::endl;
+		// std::cout << "delete event at handle client socket kfde timeout" << std::endl;
 		epoll->delete_event(fde);
 		close(fd);
 		delete client_sock;
@@ -450,7 +450,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					std::cout << "405" << std::endl;
 					response.set405Error(request);
 					client_sock->SetResponse(response.makeBodyResponse()); // クライアントソケットにレスポンスを保存
-					std::cout << "goto next event at handle client socket kfde write" << std::endl;
+					// std::cout << "goto next event at handle client socket kfde write" << std::endl;
 					epoll->GotoNextEvent(fde, kFdeWrite);				   // 書き込み準備ができたら書き込みイベントを監視
 					return;
 				}
@@ -504,8 +504,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					cgi_input_fde->state |= kFdeTimeout;
 					cgi_input_fde->timeout_ms = 2000;
 					std::cout << "output:" << output_pipe[1] << std::endl;
-					std::cout << "create cgi event" << std::endl;
-					std::cout << "cgi_input_fde->fd:" << cgi_input_fde->fd << std::endl;
+					// std::cout << "create cgi event" << std::endl;
+					// std::cout << "cgi_input_fde->fd:" << cgi_input_fde->fd << std::endl;
 					cgi_input_fde->original_client = client_sock;
 					cgi_input_fde->child_pid = pid;
 					epoll->register_event(cgi_input_fde);
@@ -519,7 +519,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 				// 通常のレスポンス処理
 				std::string res = response.makeBodyResponse();
 				client_sock->SetResponse(res);		  // クライアントソケットにレスポンスを保存
-				std::cout << "goto next event at handle client socket last of kfderead" << std::endl;
+				// std::cout << "goto next event at handle client socket last of kfderead" << std::endl;
 				epoll->GotoNextEvent(fde, kFdeWrite); // 書き込み準備ができたら書き込みイベントを監視
 			}
 		}
@@ -536,14 +536,14 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		{
 			perror("write failed");
 			close(fde->fd);
-			std::cout << "delete event at handle client socket kfde write" << std::endl;
+			// std::cout << "delete event at handle client socket kfde write" << std::endl;
 			epoll->delete_event(fde);
 			delete fde;
 			delete client_sock;
 			return;
 		}
 		// 書き込み完了後に接続をクローズ
-		std::cout << "delete event at handle client socket kfde write" << std::endl;
+		// std::cout << "delete event at handle client socket kfde write" << std::endl;
 		epoll->delete_event(fde);
 		delete client_sock;
 	}
