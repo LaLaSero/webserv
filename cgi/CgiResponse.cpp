@@ -73,8 +73,15 @@ std::string ParseCGIResponse(const std::string &response)
 
 	HeaderMap headers = ParseHeaders(header_part);
 
+	result = "HTTP/1.1 200 OK\r\n";
+	if (headers.find("Status") != headers.end())
+	{
+		result = "HTTP/1.1 " + headers["Status"] + "\r\n";
+	}
+
 	std::string response_type = DetermineResponseType(headers, body_part);
 
+	std::cout << "response_type: " << response_type << std::endl;
 	result = "HTTP/1.1 ";
 	if (response_type == "document-response")
 	{

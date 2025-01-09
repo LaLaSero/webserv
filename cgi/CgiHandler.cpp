@@ -184,9 +184,13 @@ bool isAccessForbidden(const std::string &script_file_name)
 	return false;
 }
 
-void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location)
+void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request, Location location)
 {
 	CgiHandler cgi_handler(request);
+
+	dup2(input_pipe[0], STDIN_FILENO);	 // input_pipe[0]を標準入力に接続
+	close(input_pipe[0]);
+	close(input_pipe[1]);
 
 	dup2(output_pipe[1], STDOUT_FILENO); // output_pipe[1]を標準出力に接続
 	close(output_pipe[0]);

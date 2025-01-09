@@ -30,6 +30,6 @@ public:
 	std::vector<char *> makeEnvp() const;
 };
 
-void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location);
+void ExecuteChildCGI(int *input_pipe, int *output_pipe, HTTPRequest request, Location location);
 
 #endif

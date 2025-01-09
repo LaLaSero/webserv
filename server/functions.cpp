@@ -270,6 +270,7 @@ void HandleCgiSocketEvent(FdEvent *fde, unsigned int events, void *data, EpollAd
 		std::string response = ParseCGIResponse(fde->read_cont); // responseの作成
 		fde->original_client->SetResponse(response);
 		std::cout << "goto next event at handle cgi socket kfde write" << std::endl;
+				std::cout << "respose: " << fde->original_client->GetResponse() << std::endl;
 		epoll->GotoNextEvent(original_fde, kFdeWrite);
 		std::cout << "delete event at handle cgi socket" << std::endl;
 		int fd = fde->fd;
@@ -459,6 +460,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					response.selectResponseMode(request);
 				}
 			}
+					response.selectResponseMode(request);
+			
 			// CGIレスポンスが必要な場合
 			if (request.getMode() == CGI_RESPONSE)
 			{
@@ -487,6 +490,20 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					return;
 				}
 
+				int input_pipe[2];
+				if (pipe(input_pipe) == -1)
+				{
+					perror("pipe failed");
+					close(output_pipe[0]);
+					close(output_pipe[1]);
+					return;
+				}
+				if (request.getMethod() == "POST")
+				{
+					// POSTリクエストの場合はリクエストボディをCGIプロセスに渡す
+					std::string body = request.getBody();
+					write(input_pipe[1], body.c_str(), body.size());
+				}
 				// CGIプロセスを実行
 				pid_t pid = fork();
 				std::cout << "pid:" << pid << std::endl;
@@ -496,7 +513,7 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 					return;
 				}
 				else if (pid == 0) // 子プロセス（CGI）
-					ExecuteChildCGI(output_pipe, request, *loc_it);
+					ExecuteChildCGI(input_pipe, output_pipe, request, *loc_it);
 				else // 親プロセス（サーバー）
 				{
 					// 親プロセス側でpipeの読み書きイベントをepollに登録
@@ -520,6 +537,8 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 				std::string res = response.makeBodyResponse();
 				client_sock->SetResponse(res);		  // クライアントソケットにレスポンスを保存
 				std::cout << "goto next event at handle client socket last of kfderead" << std::endl;
+				std::cout << "response: " << res << std::endl;
+				std::cout << request.getMode() << std::endl;
 				epoll->GotoNextEvent(fde, kFdeWrite); // 書き込み準備ができたら書き込みイベントを監視
 			}
 		}
