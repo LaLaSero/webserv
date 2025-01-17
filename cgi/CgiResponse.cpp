@@ -77,12 +77,16 @@ std::string ParseCGIResponse(const std::string &response)
 	}
 	else if (response_type == "client-redir-response")
 	{
-		result += "Location: " + headers["Location"] + "\n";
+		result += "302 Found\r\n";
+		result += "Location: " + headers["Location"] + "\r\n";
+		result += "\r\n";
 	}
 	else if (response_type == "client-redirdoc-response")
 	{
-		result += "Location: " + headers["Location"] + "\n";
-		result += "Body: " + body_part + "\n";
+		result += "302 Found\r\n";
+		result += "Location: " + headers["Location"] + "\r\n";
+		result += "Content-Type: " + headers["Content-Type"] + "\r\n";
+		result += "\r\n" + body_part;
 	}
 	else
 	{

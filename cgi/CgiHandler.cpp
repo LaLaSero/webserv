@@ -18,7 +18,7 @@ CgiHandler::CgiHandler(HTTPRequest &request) : request_(request)
 	env_vars_["PATH_INFO"] = request_.getUri();
 	env_vars_["REQUEST_URI"] = request_.getUri();
 	env_vars_["SERVER_PROTOCOL"] = request_.getVersion();
-	env_vars_["SERVER_SOFTWARE"] = "42_WebServ";
+	env_vars_["SERVER_SOFTWARE"] = "webserv";
 	env_vars_["SERVER_NAME"] = request_.getHost();
 	env_vars_["GATEWAY_INTERFACE"] = "CGI/1.1";
 	env_vars_["REMOTE_ADDR"] = "IP of the client";
