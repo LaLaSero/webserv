@@ -150,7 +150,7 @@ void HTTPResponse::set405Error(HTTPRequest& request)
 	_body = "<html><head><title>405 Method Not Allowed</title></head><body><h1>405 Method Not Allowed</h1><p>Method Not Allowed</p></body></html>";
 	makeMessage();
 	_keepAlive = request.getHeader("Connection") == "keep-alive";
-	std::cout << message << std::endl;
+	// std::cout << message << std::endl;
 }
 
 void HTTPResponse::set500Error()
@@ -159,7 +159,7 @@ void HTTPResponse::set500Error()
 	_body = "<html><head><title>500 Internal Server Error</title></head><body><h1>500 Internal Server Error</h1><p>Internal Server Error</p></body></html>";
 	makeMessage();
 	_keepAlive = false;
-	std::cout << message << std::endl;
+	// std::cout << message << std::endl;
 }
 
 void HTTPResponse::setStatusCode(HTTPStatusCode statusCode)
@@ -182,7 +182,7 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 {
 	std::string uri = request.getUri();
 	
-	std::cout << uri << std::endl;
+	// std::cout << uri << std::endl;
 
 	if (request.get_errorno_() != 0)
 	{
@@ -191,7 +191,7 @@ void HTTPResponse::selectResponseMode(HTTPRequest& request)
 	if (isCGIRequest(request))
 	{
 		request.setMode(CGI_RESPONSE);
-		std::cout << "cgi" << std::endl;
+		// std::cout << "cgi" << std::endl;
 		// handleCGIRequest(request);
 	}
 	else

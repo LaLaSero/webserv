@@ -40,7 +40,7 @@ int main()
 	try {
 		parser_request.parse(buffer);           // リクエストを解析
 		if (parser_request.isFinished()) {
-			std::cout << "Request successfully parsed." << std::endl;
+			// std::cout << "Request successfully parsed." << std::endl;
 			request.print();                    // リクエスト内容を出力（デバッグ用）
 		}
 	} catch (const ServerException& e) {

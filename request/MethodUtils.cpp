@@ -6,7 +6,7 @@
 /*   By: yutakagi <yutakagi@student.42.jp>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/24 20:00:43 by ryanagit          #+#    #+#             */
-/*   Updated: 2024/12/10 14:18:05 by yutakagi         ###   ########.fr       */
+/*   Updated: 2025/01/17 15:23:07 by yutakagi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ std::string get_error_page(int status, const ChildServer *serv, std::string defa
     // errorPagesの検索
     std::map<int, std::string>::const_iterator it = serv->get_error_page().find(status);
     
-    std::cout << status << std::endl;
+    // std::cout << status << std::endl;
     // statusに対応するエラーページが見つかった場合
     if (it != serv->get_error_page().end()) 
         body = get_file_content(it->second);
@@ -140,8 +140,8 @@ std::vector<Location>::const_iterator find_location(const ChildServer *Server, c
 
 bool is_max_over(const std::string body, size_t max)
 {
-    std::cout << "body:" <<body.length() << std::endl;
-    std::cout << "max:" << max << std::endl;
+    // std::cout << "body:" <<body.length() << std::endl;
+    // std::cout << "max:" << max << std::endl;
     if (body.length() > max)
         return (true);
     else

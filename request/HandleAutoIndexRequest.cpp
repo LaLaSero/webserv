@@ -54,7 +54,7 @@ void HTTPResponse::redirectToTrailingSlash(const HTTPRequest& request)
 			"<body><h1>301 Moved Permanently</h1>"
 			"<p>Redirecting to " + uri + "</p></body></html>";
 	makeMessage();
-	std::cout << message << std::endl;
+	// std::cout << message << std::endl;
 }
 
 std::string HTTPResponse::mapUriToPath(std::string uri)
@@ -248,7 +248,7 @@ void HTTPResponse::handleAutoIndex(HTTPRequest& request)
 		_body = "<html><head><title>403 Forbidden</title></head>"
 				"<body><h1>403 Forbidden</h1><p>Directory listing is forbidden.</p></body></html>";
 		makeMessage();
-		std::cout << message << std::endl;
+		// std::cout << message << std::endl;
 		return ;
 	}
 

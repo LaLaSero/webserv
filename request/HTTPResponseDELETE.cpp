@@ -19,7 +19,7 @@ void HTTPResponse::makeBodyDELETE(HTTPRequest& request)
     {
       if (find_location(_server,request.getPath()) != _server->getLocations().end())
       {
-        std::cout << (*(find_location(_server,request.getPath()))).getPath() << std::endl;
+        // std::cout << (*(find_location(_server,request.getPath()))).getPath() << std::endl;
         loc = *(find_location(_server,request.getPath()));
         if (!loc.getRedirection().second.empty())
         {

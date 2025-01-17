@@ -25,6 +25,6 @@ void HTTPResponse::handleNormalRequest(HTTPRequest& request)
 	}
 	makeMessage();
 	_keepAlive = request.getHeader("Connection") == "keep-alive";
-	std::cout << message << std::endl;
+	// std::cout << message << std::endl;
 
 }

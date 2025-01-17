@@ -326,9 +326,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 		HTTPResponse response(epoll->get_config());
 		response.set500Error();
 		std::string response_str = response.makeBodyResponse();
-		std::cout << "--------start timeout response--------" << std::endl;
-		std::cout << response_str << std::endl;
-		std::cout << "--------end timeout response--------" << std::endl;
+		// std::cout << "--------start timeout response--------" << std::endl;
+		// std::cout << response_str << std::endl;
+		// std::cout << "--------end timeout response--------" << std::endl;
 		client_sock->SetResponse(response_str);
 		ssize_t nwritten = write(fde->fd, response_str.c_str(), response_str.size());
 		if (nwritten == -1)
@@ -528,9 +528,9 @@ void HandleClientSocketEvent(FdEvent *fde, unsigned int events, void *data, Epol
 	// 書き込みイベントの処理
 	if (events & kFdeWrite)
 	{
-		std::cout << "start responsing" << std::endl;
+		// std::cout << "start responsing" << std::endl;
 		std::string response = client_sock->GetResponse();
-		std::cout << response << std::endl;
+		// std::cout << response << std::endl;
 		ssize_t nwritten = write(fde->fd, response.c_str(), response.size());
 		if (nwritten == -1)
 		{
