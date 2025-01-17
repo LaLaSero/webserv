@@ -40,14 +40,7 @@ std::string DetermineResponseType(const HeaderMap &headers, const std::string &b
 
 	if (headers.find("Location") != headers.end())
 	{
-		if (headers.at("Location").find("http://") != std::string::npos)
-		{
-			response_type = "client-redir-response";
-		}
-		else
-		{
-			response_type = "local-redir-response";
-		}
+		response_type = "client-redir-response";
 	}
 
 	if (response_type == "client-redir-response" && !body.empty())
@@ -82,19 +75,6 @@ std::string ParseCGIResponse(const std::string &response)
 		result += "Content-Type: " + headers["Content-Type"] + "\r\n";
 		result += "\r\n" + body_part;
 	}
-	else if (response_type == "local-redir-response")
-	{
-		std::string location = headers["Location"];
-		if (location.empty())
-		{
-			result += "400 Bad Request\r\n\r\nLocation header not found.\n";
-		}
-		else
-		{
-			result += "302 Found\r\n";
-			result += "Location: " + location + "\r\n\r\n";
-		}
-	}
 	else if (response_type == "client-redir-response")
 	{
 		result += "Location: " + headers["Location"] + "\n";
@@ -103,7 +83,6 @@ std::string ParseCGIResponse(const std::string &response)
 	{
 		result += "Location: " + headers["Location"] + "\n";
 		result += "Body: " + body_part + "\n";
-
 	}
 	else
 	{
