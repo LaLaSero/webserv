@@ -31,108 +31,16 @@ void CgiHandler::setRequestBody(const std::string &body)
 	request_body_ = body;
 }
 
+// CGIのディレクトリパスがconfigから設定されているかを確認
 bool CgiHandler::is_valid_root_and_executer_cgi()
 {
-	// CGIのディレクトリパスやインタプリタがconfigから設定されているかを確認
+	if (request_.getLocation().getRootDirectory().empty())
+	{
+		std::cerr << "Root directory is not set in config file" << std::endl;
+		return false;
+	}
 	return true;
 }
-
-// bool CgiHandler::ExecuteCGI(std::string &response)
-// {
-// 	int input_pipe[2], output_pipe[2];
-
-// 	if (!is_valid_root_and_executer_cgi())
-// 	{
-// 		return "403 Forbidden";
-// 	}
-// 	if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
-// 	{
-// 		perror("pipe");
-// 		return "500 Internal Server Error";
-// 	}
-
-// 	pid_t pid = fork();
-// 	if (pid == -1)
-// 	{
-// 		perror("fork");
-// 		return "500 Internal Server Error";
-// 	}
-// 	else if (pid == 0) // child process
-// 	{
-// 		close(input_pipe[1]);
-// 		close(output_pipe[0]);
-
-// 		dup2(input_pipe[0], STDIN_FILENO);
-// 		dup2(output_pipe[1], STDOUT_FILENO);
-
-// 		close(input_pipe[0]);
-// 		close(output_pipe[1]);
-
-// 		// 環境変数を設定
-// 		std::vector<char *> envp;
-// 		for (std::map<std::string, std::string>::const_iterator it = env_vars_.begin(); it != env_vars_.end(); ++it)
-// 		{
-// 			std::string env_pair = it->first + "=" + it->second;
-// 			envp.push_back(strdup(env_pair.c_str()));
-// 		}
-// 		envp.push_back(NULL);
-
-// 		std::string script_path = env_vars_["SCRIPT_NAME"];
-// 		std::string python_path = "python3";
-
-// 		python_path = "/usr/bin/python3";
-// 		script_path = "./test.py";
-// 		chdir("../cgi-bin");
-
-// 		char *argv[] = {const_cast<char *>(python_path.c_str()),
-// 						const_cast<char *>(script_path.c_str()),
-// 						NULL};
-// 		execve(const_cast<char *>(python_path.c_str()), argv, &(envp[0]));
-
-// 		perror("execve");
-// 		for (size_t i = 0; i < envp.size(); ++i)
-// 		{
-// 			free(envp[i]);
-// 		}
-// 		std::exit(1);
-// 	}
-// 	else // parent process
-// 	{
-// 		close(input_pipe[0]);
-// 		close(output_pipe[1]);
-
-// 		if (!request_body_.empty())
-// 		{
-// 			write(input_pipe[1], request_body_.c_str(), request_body_.size());
-// 		}
-// 		close(input_pipe[1]);
-
-// 		// CGIからのレスポンスを読み取る
-// 		std::string cgi_response;
-// 		char buffer[1024];
-// 		ssize_t read_bytes;
-// 		while ((read_bytes = read(output_pipe[0], buffer, sizeof(buffer))) > 0)
-// 		{
-// 			cgi_response.append(buffer, read_bytes);
-// 		}
-// 		close(output_pipe[0]);
-
-// 		int status;
-
-// 		waitpid(pid, &status, 0);
-
-// 		bool local_redirect_flag = 0;
-// 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-// 		{
-// 			response = ParseCGIResponse(cgi_response); // responseの作成
-// 		}
-// 		else
-// 		{
-// 			response = "500 Internal Server Error";
-// 		}
-// 		return local_redirect_flag;
-// 	}
-// }
 
 std::vector<char *> CgiHandler::makeEnvp() const
 {
@@ -168,7 +76,6 @@ std::string getCgiDirectory(Location &location, HTTPRequest &request)
 	std::string cgi_dir_tail = request.getLocation().getPath() + "cgi-bin/";
 	cgi_dir_head.erase(cgi_dir_head.length() - 1);
 	std::string cgi_dir = cgi_dir_head + cgi_dir_tail;
-	std::cerr << "cgi_directory: " << cgi_dir << std::endl;
 
 	return cgi_dir;
 }
@@ -188,7 +95,13 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location)
 {
 	CgiHandler cgi_handler(request);
 
-	dup2(output_pipe[1], STDOUT_FILENO); // output_pipe[1]を標準出力に接続
+	if (!cgi_handler.is_valid_root_and_executer_cgi())
+	{
+		std::cerr << "500 Internal Server Error" << std::endl;
+		std::exit(1);
+	}
+
+	dup2(output_pipe[1], STDOUT_FILENO);
 	close(output_pipe[0]);
 	close(output_pipe[1]);
 
@@ -207,6 +120,7 @@ void ExecuteChildCGI(int *output_pipe, HTTPRequest request, Location location)
 
 	if (isAccessForbidden(script_file_name))
 	{
+		std::cerr << "403 Forbidden" << std::endl;
 		std::exit(1);
 	}
 
