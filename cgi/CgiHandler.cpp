@@ -48,7 +48,13 @@ std::vector<char *> CgiHandler::makeEnvp() const
 	for (std::map<std::string, std::string>::const_iterator it = env_vars_.begin(); it != env_vars_.end(); ++it)
 	{
 		std::string env_pair = it->first + "=" + it->second;
-		envp.push_back(strdup(env_pair.c_str()));
+		char *env = strdup(env_pair.c_str());
+		if (env == NULL)
+		{
+			perror("strdup");
+			std::exit(1);
+		}
+		envp.push_back(env);
 	}
 	envp.push_back(NULL);
 	return envp;
